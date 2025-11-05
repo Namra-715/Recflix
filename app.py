@@ -8,8 +8,8 @@ app.secret_key = "supersecretkey"
 # MySQL Configuration
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Puttumari230&'
-app.config['MYSQL_DB'] = 'Recflix'
+app.config['MYSQL_PASSWORD'] = 'your_password'
+app.config['MYSQL_DB'] = 'database_name'
 
 mysql = MySQL(app)
 
