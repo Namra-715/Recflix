@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -11,5 +11,175 @@
         <p>This is your dashboard.</p>
         <a href="/logout"><button>Logout</button></a>
     </div>
+</body>
+</html>
+
+
+ -->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Recflix</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Your custom CSS (load after Bootstrap to override) -->
+    <link rel="stylesheet" href="../static/dashboard.css">
+</head>
+<body class="bg-dark text-white"> <!-- Bootstrap dark background for Netflix feel -->
+    <!-- Header (Netflix-style nav) -->
+    <header class="header bg-black">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center py-2">
+                <div class="logo text-danger fw-bold fs-3">Recflix</div>
+                <nav class="nav">
+                    <a href="./dashboard.html" class="nav-link text-white">Home</a>
+                    <a href="#tv-shows" class="nav-link text-white">TV Shows</a>
+                    <a href="#movies" class="nav-link text-white">Movies</a>
+                    <a href="#my-list" class="nav-link text-white">My List</a>
+                </nav>
+                <div class="d-flex align-items-center">
+                    <!-- Functional search form -->
+                    <form action="" method="GET" class="d-inline me-3">
+                        <input type="text" name="query" placeholder="Search movies..." class="form-control bg-secondary text-white border-0" required style="width: 200px;">
+                    </form>
+                    <div class="profile-menu position-relative">
+                        <img src="https://via.placeholder.com/40x40?text={{ user_name[0] if user_name else 'U' }}" alt="Profile Icon" class="profile-icon rounded-circle" style="cursor: pointer;">
+                        <div class="dropdown position-absolute bg-dark border" style="display: none; top: 50px; right: 0; z-index: 10;">
+                            <a href="#account" class="dropdown-item text-white">Account</a>
+                            <a href="#settings" class="dropdown-item text-white">Settings</a>
+                            <a href="" class="dropdown-item text-white">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Content -->
+    <main class="dashboard container-fluid py-4">
+        {% if is_new_user %}
+        <!-- Personalized hero for new users -->
+        <div class="hero text-center py-5">
+            <h1 class="display-4 text-danger">Welcome to Recflix, {{ user_name or 'User' }}!</h1>
+            <p class="lead">Discover the trending movies and start building your watchlist.</p>
+        </div>
+        {% endif %}
+
+        <!-- Trending Movies Carousel (Bootstrap) -->
+       <section class="carousel-row mb-5">
+            <h2 class="mb-3">Trending Now</h2>
+            {% if trending_movies %}
+            <div id="trending-carousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-indicators">
+                    {% for i in range((trending_movies|length // 6) + 1) %} <button type="button" data-bs-target="#trending-carousel" data-bs-slide-to="{{ i }}" {% if i == 0 %}class="active"{% endif %} aria-label="Slide {{ i + 1 }}"></button>
+                    {% endfor %}
+                </div>
+                <div class="carousel-inner">
+                    {% set movies_per_slide = 6 %} {% for slide_index in range(0, trending_movies|length, movies_per_slide) %}
+                    <div class="carousel-item {% if slide_index == 0 %}active{% endif %}">
+                        <div class="d-flex justify-content-center flex-wrap">
+                            {% for movie in trending_movies[slide_index:slide_index + movies_per_slide] %}
+                            <div class="item mx-2 position-relative" onclick="playMovie('{{ movie.title }}')" style="cursor: pointer;">
+                                <img src="https://image.tmdb.org/t/p/w200{{ movie.poster_path }}" alt="{{ movie.title }}" class="img-fluid rounded">
+                                <div class="overlay position-absolute top-50 start-50 translate-middle text-white fw-bold" style="background: rgba(0,0,0,0.7); padding: 10px; border-radius: 50%; display: none;">▶ Play</div>
+                                {% if is_new_user %}
+                                <form action="" method="POST" class="position-absolute bottom-0 start-0 p-2">
+                                    <input type="hidden" name="title" value="{{ movie.title }}">
+                                    <input type="hidden" name="poster_path" value="{{ movie.poster_path }}">
+                                    <button type="submit" class="btn btn-danger btn-sm">+ Add</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#trending-carousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#trending-carousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+            {% else %}
+            <p class="text-center text-muted">No trending movies available right now. Check back later!</p>
+            {% endif %}
+        </section>
+
+        
+        <!---Continue watching-->
+        <section class="continue-watching-row mb-5" id="continue-watching">
+            <h4 class="mb-3 d-flex justify-content-center">Continue Watching</h4>
+            {% if continue_watching_list %}
+            <div class="d-flex flex-wrap justify-content-start">
+                {% for item in continue_watching_list %}
+                <div class="item mx-2 mb-3 continue-card" onclick="playMovie('{{ item.title }}')">
+                    <img src="https://image.tmdb.org/t/p/w300{{ item.poster_path }}" alt="{{ item.title }}" class="img-fluid rounded" style="width: 300px;">
+                    
+                
+
+                    <div class="overlay position-absolute top-50 start-50 translate-middle text-white fw-bold" style="background: rgba(0,0,0,0.7); padding: 10px; border-radius: 50%; display: none;">
+                        <span style="font-size: 1.5rem;">▶</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">Nothing to continue watching. Start a movie to build this list!</p>
+            {% endif %}
+        </section>
+
+
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer bg-black text-center py-3">
+        <p class="mb-0">&copy; 2025 Recflix. All rights reserved.</p>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script>
+        // Placeholder for playing a movie
+        function playMovie(title) {
+            alert(`Playing: ${title}`); // Replace with real logic
+        }
+
+        // Profile dropdown toggle (using Bootstrap classes for simplicity)
+        const profileIcon = document.querySelector('.profile-icon');
+        const dropdown = document.querySelector('.dropdown');
+        if (profileIcon && dropdown) {
+            profileIcon.addEventListener('click', function () {
+                dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+            });
+
+            // Close dropdown if clicked outside
+            window.addEventListener('click', function (e) {
+                if (!e.target.closest('.profile-menu')) {
+                    dropdown.style.display = 'none';
+                }
+            });
+        }
+
+        // Show overlay on hover for movie items
+        document.querySelectorAll('.item').forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                item.querySelector('.overlay').style.display = 'block';
+            });
+            item.addEventListener('mouseleave', () => {
+                item.querySelector('.overlay').style.display = 'none';
+            });
+        });
+    </script>
 </body>
 </html>

@@ -9,7 +9,7 @@ app.secret_key = "supersecretkey"
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'your_password'
-app.config['MYSQL_DB'] = 'database_name'
+app.config['MYSQL_DB'] = 'your_db_name'
 
 mysql = MySQL(app)
 
@@ -73,6 +73,22 @@ def login():
 
 
 
+# Helper function to fetch trending movies from local DB (for new users)
+def get_local_trending_movies():
+    cur = mysql.connection.cursor()
+    # Trending: Recent releases (last 2 years) with high popularity and weighted rating
+    query = """
+        SELECT id, title, poster_path, popularity, vote_average, vote_count, release_date
+        FROM movies
+        WHERE release_date >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+        ORDER BY (vote_average * vote_count / (vote_count + 100)) + popularity DESC
+    """
+    cur.execute(query)
+    results = cur.fetchall()
+    cur.close()
+    # Return as list of dicts for easy template use
+    return [{'id': row[0], 'title': row[1], 'poster_path': row[2], 'popularity': row[3], 'vote_average': row[4], 'vote_count': row[5], 'release_date': row[6]} for row in results]
+
 
 # Dashboard Page
 @app.route('/dashboard')
@@ -82,9 +98,33 @@ def dashboard():
         return redirect('/login')
 
     user_name = session['full_name']
+    user_id = session['user_id']
 
-    # You can fetch watchlist/recommendations here
-    return render_template('dashboard.html', user_name=user_name)
+    # Fetch user's watchlist
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT movie_id, title, poster_path FROM watchlist WHERE user_id=%s", (user_id,))
+    watchlist = cur.fetchall()
+    cur.close()
+
+    # Determine if user is "new" (empty watchlist)
+    is_new_user = len(watchlist) == 0
+
+    trending_movies = []
+    if is_new_user:
+        # For new users: Use local trending movies
+        trending_movies = get_local_trending_movies()
+        if not trending_movies:
+            # Fallback to TMDB if local fails
+            trending_movies = get_trending_movies()
+    else:
+        # For returning users: Use TMDB trending (or mix with local)
+        trending_movies = get_trending_movies()
+
+    return render_template('dashboard.html', 
+                           user_name=user_name, 
+                           trending_movies=trending_movies, 
+                           watchlist=watchlist, 
+                           is_new_user=is_new_user)
 
 
 # Logout
