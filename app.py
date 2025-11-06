@@ -9,7 +9,7 @@ app.secret_key = "supersecretkey"
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'your_password'
-app.config['MYSQL_DB'] = 'your_db_name'
+app.config['MYSQL_DB'] = 'your_db'
 
 mysql = MySQL(app)
 
@@ -115,10 +115,10 @@ def dashboard():
         trending_movies = get_local_trending_movies()
         if not trending_movies:
             # Fallback to TMDB if local fails
-            trending_movies = get_trending_movies()
+            trending_movies = get_local_trending_movies()
     else:
         # For returning users: Use TMDB trending (or mix with local)
-        trending_movies = get_trending_movies()
+        trending_movies = get_local_trending_movies()
 
     return render_template('dashboard.html', 
                            user_name=user_name, 

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movies - Recflix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/dashboard.css">
+    
+    <style>
+        /* Optional: Custom style for the movie grid items to maintain spacing */
+        .movie-grid .col {
+            padding-top: 15px;
+            padding-bottom: 15px;
+        }
+        .movie-card {
+            background-color: #141414; /* Darker than body background */
+            border: none;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            cursor: pointer;
+        }
+        /* Reusing the .item:hover effect for consistency */
+        .movie-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.7);
+            z-index: 10;
+        }
+        .movie-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-dark text-white"> 
+    
+    <header class="header bg-black">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center py-2">
+                <div class="logo text-danger fw-bold fs-3">Recflix</div>
+                <nav class="nav">
+                    <a href="/dashboard" class="nav-link text-white">Home</a>
+                    <a href="#top-rated" class="nav-link text-white">Tv Shows</a>
+                    <a href="./movies.html" class="nav-link text-danger">Movies</a> <a href="#tv-shows" class="nav-link text-white">TV Shows</a>
+                    <a href="#my-list" class="nav-link text-white">My List</a>
+                </nav>
+                <div class="d-flex align-items-center">
+                    <form action="" method="GET" class="d-inline me-3">
+                        <input type="text" name="query" placeholder="Search movies..." class="form-control bg-secondary text-white border-0" required style="width: 200px;">
+                    </form>
+                    <img src="https://via.placeholder.com/40x40?text=U" alt="Profile Icon" class="rounded-circle" style="cursor: pointer;">
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container py-4">
+        <h1 class="m-5 display-5 border-bottom border-danger pb-2">New Releases</h1>
+
+        {% if recent_movies_list %}
+        <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-5 row-cols-xl-6 movie-grid" id="movie-grid">
+            {% for movie in recent_movies_list if movie.release_date %}
+            <div class="col" data-movie-index="{{ loop.index0 }}" style="display: none;">
+                <div class="card movie-card h-100" onclick="playMovie('{{ movie.title }}')">
+                    
+                    <img src="https://image.tmdb.org/t/p/w300{{ movie.poster_path }}" 
+                         alt="{{ movie.title }} Poster" 
+                         loading="lazy" 
+                         class="card-img-top">
+                    
+                    <div class="card-body text-center p-2">
+                        <h5 class="card-title fs-6 mb-1 text-wrap text-white" title="{{ movie.title }}">{{ movie.title }}</h5>
+                        <p class="card-text small mb-0 text-white">
+                            Released: {{ movie.release_date.strftime('%b %d, %Y') if movie.release_date else 'N/A' }}
+                        </p>
+                        <span class="badge bg-warning text-dark fw-bold">
+                            IMDb: {{ "{:.1f}".format(movie.imdb_rating) if movie.imdb_rating else 'N/A' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-4">
+            <button id="show-more-btn" class="btn btn-danger btn-lg px-5" style="display: none;">Show More</button>
+        </div>
+        
+        <p id="no-more-msg" class="text-center text-muted mt-4" style="display: none;">That's all the new releases we have!</p>
+
+        {% else %}
+        <p class="text-center text-muted">No new movie releases from the last 3 months are available right now.</p>
+        {% endif %}
+    </main>
+
+    <footer class="footer bg-black text-center py-3 mt-5">
+        <p class="mb-0">&copy; 2023 Recflix. All rights reserved.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const grid = document.getElementById('movie-grid');
+        const showMoreBtn = document.getElementById('show-more-btn');
+        const noMoreMsg = document.getElementById('no-more-msg');
+        
+        // Configuration
+        const INITIAL_LOAD_COUNT = 12; // Number of movies to show immediately
+        const LOAD_INCREMENT = 6;      // Number of movies to add with "Show More"
+
+        let currentCount = 0;
+        const totalMovies = grid ? grid.children.length : 0;
+
+        // Function to display a specific number of movies
+        function loadMovies(count) {
+            const start = currentCount;
+            const end = Math.min(start + count, totalMovies);
+
+            for (let i = start; i < end; i++) {
+                grid.children[i].style.display = 'block';
+            }
+            
+            currentCount = end;
+
+            // Check if we've displayed all movies
+            if (currentCount >= totalMovies) {
+                if (showMoreBtn) showMoreBtn.style.display = 'none';
+                if (noMoreMsg) noMoreMsg.style.display = 'block';
+            } else {
+                if (showMoreBtn) showMoreBtn.style.display = 'block';
+            }
+        }
+
+        // Initial load when the page loads
+        if (totalMovies > 0) {
+            loadMovies(INITIAL_LOAD_COUNT);
+        }
+
+        // Event listener for the "Show More" button
+        if (showMoreBtn) {
+            showMoreBtn.addEventListener('click', () => {
+                loadMovies(LOAD_INCREMENT);
+            });
+        }
+        
+        // Placeholder function (same as in your dashboard)
+        function playMovie(title) {
+            alert(`Playing: ${title}`);
+        }
+        
+        // Reuse hover effect from dashboard
+        // Note: The card hover CSS is mostly handled by the style block above
+    </script>
+</body>
+</html>

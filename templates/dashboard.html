@@ -62,13 +62,13 @@
 
     <!-- Main Dashboard Content -->
     <main class="dashboard container-fluid py-4">
-        {% if is_new_user %}
+        
         <!-- Personalized hero for new users -->
         <div class="hero text-center py-5">
             <h1 class="display-4 text-danger">Welcome to Recflix, {{ user_name or 'User' }}!</h1>
             <p class="lead">Discover the trending movies and start building your watchlist.</p>
         </div>
-        {% endif %}
+       
 
         <!-- Trending Movies Carousel (Bootstrap) -->
        <section class="carousel-row mb-5">
