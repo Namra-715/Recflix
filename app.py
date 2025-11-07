@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, session, flash, url_for
 from flask_mysqldb import MySQL
 import bcrypt
+from database_query import MovieDatabase, MYSQL_CONFIG
+
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -8,8 +10,8 @@ app.secret_key = "supersecretkey"
 # MySQL Configuration
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'your_password'
-app.config['MYSQL_DB'] = 'your_db'
+app.config['MYSQL_PASSWORD'] = 'password'
+app.config['MYSQL_DB'] = 'db_name'
 
 mysql = MySQL(app)
 
@@ -100,31 +102,139 @@ def dashboard():
     user_name = session['full_name']
     user_id = session['user_id']
 
-    # Fetch user's watchlist
     cur = mysql.connection.cursor()
+    # Fetch user's watchlist
     cur.execute("SELECT movie_id, title, poster_path FROM watchlist WHERE user_id=%s", (user_id,))
     watchlist = cur.fetchall()
     cur.close()
 
-    # Determine if user is "new" (empty watchlist)
     is_new_user = len(watchlist) == 0
+    trending_movies = get_local_trending_movies()
 
-    trending_movies = []
-    if is_new_user:
-        # For new users: Use local trending movies
-        trending_movies = get_local_trending_movies()
-        if not trending_movies:
-            # Fallback to TMDB if local fails
-            trending_movies = get_local_trending_movies()
+    # --- Handle search if any ---
+    search_query = request.args.get('query', '').strip()
+    search_results = []
+    if search_query:
+        filters = {'title': search_query}
+        db = MovieDatabase(
+            host=MYSQL_CONFIG['host'],
+            database=MYSQL_CONFIG['database'],
+            user=MYSQL_CONFIG['user'],
+            password=MYSQL_CONFIG['password'],
+            port=MYSQL_CONFIG['port']
+        )
+        if db.connect():
+            search_results = db.query_movies(filters)
+            db.disconnect()
+
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT movie_id, title, poster_path 
+        FROM continue_watching 
+        WHERE user_id = %s 
+        ORDER BY last_watched DESC
+    """, (user_id,))
+    continue_watching = cur.fetchall()
+    cur.close()
+
+    return render_template(
+        'dashboard.html',
+        user_name=user_name,
+        trending_movies=trending_movies,
+        watchlist=watchlist,
+        is_new_user=is_new_user,
+        search_results=search_results,
+        search_query=search_query,
+        continue_watching=continue_watching
+    )
+
+#create watch list
+@app.route('/add_to_watchlist', methods=['POST'])
+def add_to_watchlist():
+    if 'user_id' not in session:
+        flash("Please log in to add movies to your watchlist.", "warning")
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    movie_id = request.form['movie_id']
+    title = request.form['title']
+    poster_path = request.form['poster_path']
+
+    cur = mysql.connection.cursor()
+
+    # Check if movie is already in watchlist
+    cur.execute("SELECT * FROM watchlist WHERE user_id=%s AND movie_id=%s", (user_id, movie_id))
+    existing = cur.fetchone()
+
+    if existing:
+        flash("This movie is already in your watchlist!", "info")
     else:
-        # For returning users: Use TMDB trending (or mix with local)
-        trending_movies = get_local_trending_movies()
+        cur.execute(
+            "INSERT INTO watchlist (user_id, movie_id, title, poster_path) VALUES (%s, %s, %s, %s)",
+            (user_id, movie_id, title, poster_path)
+        )
+        mysql.connection.commit()
+        flash(f"Added '{title}' to your watchlist!", "success")
 
-    return render_template('dashboard.html', 
-                           user_name=user_name, 
-                           trending_movies=trending_movies, 
-                           watchlist=watchlist, 
-                           is_new_user=is_new_user)
+    cur.close()
+    return redirect(url_for('dashboard'))
+
+#remove from watch list
+@app.route('/remove_from_watchlist', methods=['POST'])
+def remove_from_watchlist():
+    if 'user_id' not in session:
+        flash("Please login first.", "warning")
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    movie_id = request.form['movie_id']
+
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM watchlist WHERE user_id=%s AND movie_id=%s", (user_id, movie_id))
+    mysql.connection.commit()
+    cur.close()
+
+    flash("Movie removed from your watchlist.", "info")
+    return redirect(url_for('dashboard'))
+
+#continue watching
+@app.route('/continue_watching', methods=['POST'])
+def continue_watching():
+    if 'user_id' not in session:
+        flash("Please login to watch movies.", "warning")
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    movie_id = request.form['movie_id']
+    title = request.form['title']
+    poster_path = request.form['poster_path']
+
+    cur = mysql.connection.cursor()
+
+    # Check if already in continue_watching
+    cur.execute("SELECT * FROM continue_watching WHERE user_id=%s AND movie_id=%s", (user_id, movie_id))
+    existing = cur.fetchone()
+
+    if existing:
+        # Update timestamp only
+        cur.execute("UPDATE continue_watching SET last_watched = CURRENT_TIMESTAMP WHERE user_id=%s AND movie_id=%s",
+                    (user_id, movie_id))
+    else:
+        # Insert new entry
+        cur.execute(
+            "INSERT INTO continue_watching (user_id, movie_id, title, poster_path) VALUES (%s, %s, %s, %s)",
+            (user_id, movie_id, title, poster_path)
+        )
+
+    mysql.connection.commit()
+    cur.close()
+
+    flash(f"Now playing '{title}' — added to Continue Watching!", "success")
+    return redirect(url_for('dashboard'))
+
+
+
+
 
 
 # Logout
