@@ -11,7 +11,7 @@ app.secret_key = "supersecretkey"
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'password'
-app.config['MYSQL_DB'] = 'db_name'
+app.config['MYSQL_DB'] = 'Recflix'
 
 mysql = MySQL(app)
 
@@ -130,11 +130,10 @@ def dashboard():
     cur = mysql.connection.cursor()
     cur.execute("""
         SELECT movie_id, title, poster_path 
-        FROM continue_watching 
+        FROM already_watched 
         WHERE user_id = %s 
-        ORDER BY last_watched DESC
     """, (user_id,))
-    continue_watching = cur.fetchall()
+    already_watched = cur.fetchall()
     cur.close()
 
     return render_template(
@@ -145,7 +144,7 @@ def dashboard():
         is_new_user=is_new_user,
         search_results=search_results,
         search_query=search_query,
-        continue_watching=continue_watching
+        already_watched=already_watched
     )
 
 #create watch list
@@ -197,9 +196,9 @@ def remove_from_watchlist():
     flash("Movie removed from your watchlist.", "info")
     return redirect(url_for('dashboard'))
 
-#continue watching
-@app.route('/continue_watching', methods=['POST'])
-def continue_watching():
+#already watched
+@app.route('/already_watched', methods=['POST'])
+def already_watched():
     if 'user_id' not in session:
         flash("Please login to watch movies.", "warning")
         return redirect(url_for('login'))
@@ -211,25 +210,20 @@ def continue_watching():
 
     cur = mysql.connection.cursor()
 
-    # Check if already in continue_watching
-    cur.execute("SELECT * FROM continue_watching WHERE user_id=%s AND movie_id=%s", (user_id, movie_id))
+    # Insert only if not already in already_watched
+    cur.execute("SELECT * FROM already_watched WHERE user_id=%s AND movie_id=%s", (user_id, movie_id))
     existing = cur.fetchone()
 
-    if existing:
-        # Update timestamp only
-        cur.execute("UPDATE continue_watching SET last_watched = CURRENT_TIMESTAMP WHERE user_id=%s AND movie_id=%s",
-                    (user_id, movie_id))
-    else:
-        # Insert new entry
+    if not existing:
         cur.execute(
-            "INSERT INTO continue_watching (user_id, movie_id, title, poster_path) VALUES (%s, %s, %s, %s)",
+            "INSERT INTO already_watched (user_id, movie_id, title, poster_path) VALUES (%s, %s, %s, %s)",
             (user_id, movie_id, title, poster_path)
         )
 
     mysql.connection.commit()
     cur.close()
 
-    flash(f"Now playing '{title}' — added to Continue Watching!", "success")
+    flash(f"Now playing '{title}' — added to Already Watched!", "success")
     return redirect(url_for('dashboard'))
 
 

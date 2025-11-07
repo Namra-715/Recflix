@@ -90,7 +90,7 @@
                             {% for movie in trending_movies[slide_index:slide_index + movies_per_slide] %}
                             <div class="item mx-2 position-relative" style="cursor: pointer;">
 
-                                <form action="{{ url_for('continue_watching') }}" method="POST"
+                                <form action="{{ url_for('already_watched') }}" method="POST"
                                     onsubmit="return playMovie('{{ movie.title }}')">
                                     <input type="hidden" name="movie_id" value="{{ movie.id }}">
                                     <input type="hidden" name="title" value="{{ movie.title }}">
@@ -138,12 +138,12 @@
         <hr class="my-4">
         <!---Continue watching-->
         <section class="continue-watching-row mb-5" id="continue-watching">
-            <h2 class="mb-3">Continue Watching</h2>
-            {% if continue_watching %}
+            <h2 class="mb-3">Already Watched</h2>
+            {% if already_watched %}
             <section class="carousel-row mb-5">
 
                 <div class="d-flex flex-wrap justify-content-start">
-                    {% for movie in continue_watching %}
+                    {% for movie in already_watched %}
                     <div class="item mx-2 position-relative">
                         <img src="https://image.tmdb.org/t/p/w200{{ movie[2] }}" alt="{{ movie[1] }}"
                             class="img-fluid rounded">
