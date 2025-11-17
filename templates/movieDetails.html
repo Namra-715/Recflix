@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Recflix</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Your custom CSS (load after Bootstrap to override) -->
+    <link rel="stylesheet" href="../static/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body class="d-flex flex-column min-vh-100 bg-dark text-white">
+    <header class="header bg-black">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center py-2">
+                <div class="logo text-danger fw-bold fs-3">Recflix</div>
+                <nav class="nav">
+                    <a href="./dashboard.html" class="nav-link text-white">Home</a>
+                    <a href="#movies" class="nav-link text-white">Movies</a>
+                    <a href="#my-list" class="nav-link text-white">My List</a>
+                </nav>
+                <div class="d-flex align-items-center">
+                    <!-- Functional search form -->
+                    <form action="/dashboard" method="GET" class="d-inline me-3">
+                        <div class="input-group" style="width: 400px;">
+                            <input type="text" name="query" placeholder="Search movies..."
+                                class="form-control bg-secondary text-white border-0" required
+                                value="{{ request.args.get('query', '') }}">
+                            <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                        </div>
+                    </form>
+
+
+
+                </div>
+            </div>
+        </div>
+    </header>
+    <main class="dashboard container-fluid py-4 h-100">
+
+        {% block content %}
+        <div class="container my-5">
+            <div class="row">
+                <div class="col-md-2">
+                    <img src="https://image.tmdb.org/t/p/w500{{ poster_path }}" alt="{{ title }}"
+                        class="img-fluid rounded" style="width: 200px;">
+                </div>
+                <div class="col-md-8">
+                    <h2>{{ title }}</h2>
+                    <p><strong>Last watched:</strong> {{ last_watched or 'Yet to start' }}</p>
+                    <p><strong>Description:</strong> {{ description or 'No description available.' }}</p>
+
+                    <form method="POST" action="{{ url_for('update_last_watched') }}">
+                        <input type="hidden" name="movie_id" value="{{ movie_id }}">
+                        <button type="submit" class="btn btn-warning">Resume ▶</button>
+                    </form>
+                </div>
+            </div>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mt-4">Back to Dashboard</a>
+        </div>
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer bg-black text-center py-3 sticky-bottom">
+        <p class="mb-0">&copy; 2025 Recflix. All rights reserved.</p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

@@ -72,10 +72,10 @@ USE_HARDCODED_CONFIG = True  # Set to False to be prompted for credentials each 
 
 # MySQL Connection Settings
 MYSQL_CONFIG = {
-    'host': 'localhost',
+    'host': '',
     'database': 'Recflix',  # Change this to your database name
-    'user': 'user',  # Change this to your MySQL username
-    'password': 'password',  # Leave empty if no password, or set your password here
+    'user': 'root',  # Change this to your MySQL username
+    'password': '',  # Leave empty if no password, or set your password here
     'port': 3306
 }
 # ============================================================================

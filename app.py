@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, flash, url_for
+from flask import Flask, render_template, request, redirect, session, flash, url_for,jsonify
 from flask_mysqldb import MySQL
 import bcrypt
 from database_query import MovieDatabase, MYSQL_CONFIG
@@ -8,9 +8,9 @@ app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
 # MySQL Configuration
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'password'
+app.config['MYSQL_HOST'] = ''
+app.config['MYSQL_USER'] = ''
+app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'Recflix'
 
 mysql = MySQL(app)
@@ -134,6 +134,12 @@ def dashboard():
         WHERE user_id = %s 
     """, (user_id,))
     already_watched = cur.fetchall()
+   
+
+    cur.execute("SELECT movie_id FROM reviews WHERE user_id=%s", (user_id,))
+    reviewed_movies = [row[0] for row in cur.fetchall()]
+
+   
     cur.close()
 
     return render_template(
@@ -144,7 +150,8 @@ def dashboard():
         is_new_user=is_new_user,
         search_results=search_results,
         search_query=search_query,
-        already_watched=already_watched
+        already_watched=already_watched,
+        reviewed_movies=reviewed_movies
     )
 
 #create watch list
@@ -210,13 +217,21 @@ def already_watched():
 
     cur = mysql.connection.cursor()
 
-    # Insert only if not already in already_watched
+    # Check if already in already_watched
     cur.execute("SELECT * FROM already_watched WHERE user_id=%s AND movie_id=%s", (user_id, movie_id))
     existing = cur.fetchone()
 
-    if not existing:
+    if existing:
+        # Update last_watched timestamp if movie already exists
         cur.execute(
-            "INSERT INTO already_watched (user_id, movie_id, title, poster_path) VALUES (%s, %s, %s, %s)",
+            "UPDATE already_watched SET last_watched = NOW() WHERE user_id=%s AND movie_id=%s",
+            (user_id, movie_id)
+        )
+    else:
+        # Insert new row with last_watched as NULL initially, then update timestamp
+        cur.execute(
+            "INSERT INTO already_watched (user_id, movie_id, title, poster_path, last_watched) "
+            "VALUES (%s, %s, %s, %s, NOW())",
             (user_id, movie_id, title, poster_path)
         )
 
@@ -224,6 +239,96 @@ def already_watched():
     cur.close()
 
     flash(f"Now playing '{title}' — added to Already Watched!", "success")
+    return redirect(url_for('dashboard'))
+
+#updating the last_watched details
+@app.route('/update_last_watched', methods=['POST'])
+def update_last_watched():
+    if 'user_id' not in session:
+        flash("Login required", "warning")
+        return redirect(url_for('dashboard'))
+
+    movie_id = request.form.get('movie_id')  
+    user_id = session['user_id']
+
+    cur = mysql.connection.cursor()
+    cur.execute(
+        "UPDATE already_watched SET last_watched = NOW() WHERE user_id=%s AND movie_id=%s",
+        (user_id, movie_id)
+    )
+    mysql.connection.commit()
+    cur.close()
+
+    flash("Resume time updated!", "success")
+    return redirect(url_for('movie_details', movie_id=movie_id))
+
+#fetching movie details based on selected movie 
+@app.route('/movie/<int:movie_id>')
+def movie_details(movie_id):
+    if 'user_id' not in session:
+        flash("Login required", "warning")
+        return redirect(url_for('dashboard'))
+
+    user_id = session['user_id']
+    cur = mysql.connection.cursor()
+
+    # Join already_watched and movies to get overview as description
+    cur.execute("""
+        SELECT aw.title, aw.poster_path, aw.last_watched, m.overview
+        FROM already_watched aw
+        JOIN movies m ON aw.movie_id = m.id
+        WHERE aw.user_id=%s AND aw.movie_id=%s
+    """, (user_id, movie_id))
+
+    result = cur.fetchone()
+    cur.close()
+
+    if not result:
+        flash("No details found for this movie.", "warning")
+        return redirect(url_for('dashboard'))
+
+    title, poster_path, last_watched, description = result
+
+    return render_template(
+        "movieDetails.html",
+        movie_id=movie_id,
+        title=title,
+        poster_path=poster_path,
+        last_watched=last_watched,
+        description=description
+    )
+
+#reviews
+@app.route('/add_review', methods=['POST'])
+def add_review():
+    if 'user_id' not in session:
+        flash("Please login to write a review.", "warning")
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    movie_id = request.form['movie_id']
+    rating = request.form['rating']
+    review_text = request.form['review_text']
+
+    cur = mysql.connection.cursor()
+
+    # Check if review already exists for this user and movie
+    cur.execute("SELECT * FROM reviews WHERE user_id=%s AND movie_id=%s", (user_id, movie_id))
+    existing_review = cur.fetchone()
+    if existing_review:
+        flash("You have already submitted a review for this movie.", "info")
+        cur.close()
+        return redirect(url_for('dashboard'))
+
+    # Insert new review
+    cur.execute("""
+        INSERT INTO reviews (user_id, movie_id, rating, review_text)
+        VALUES (%s, %s, %s, %s)
+    """, (user_id, movie_id, rating, review_text))
+    mysql.connection.commit()
+    cur.close()
+
+    flash("Your review has been submitted!", "success")
     return redirect(url_for('dashboard'))
 
 
@@ -240,4 +345,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=3000, debug=True)
