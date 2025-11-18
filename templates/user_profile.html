@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ profile_user[1] }} - Recflix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-dark text-white">
+    <header class="header bg-black">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center py-2">
+                <a href="{{ url_for('dashboard') }}" class="logo text-danger fw-bold fs-3 text-decoration-none">Recflix</a>
+                <nav class="nav">
+                    <a href="{{ url_for('dashboard') }}" class="nav-link text-white">Home</a>
+                    <a href="{{ url_for('my_playlists') }}" class="nav-link text-white">My Playlists</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard container-fluid py-4">
+        <div class="container my-5">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1>{{ profile_user[1] }}</h1>
+                    <p class="text-muted">{{ profile_user[2] }}</p>
+                    
+                    <div class="d-flex gap-3 mb-3 align-items-center">
+                        {% if is_own_profile %}
+                        <button type="button" class="btn btn-outline-light" data-bs-toggle="collapse" data-bs-target="#followersList">
+                            <strong>{{ followers_count }}</strong> Followers
+                        </button>
+                        <button type="button" class="btn btn-outline-light" data-bs-toggle="collapse" data-bs-target="#followingList">
+                            <strong>{{ following_count }}</strong> Following
+                        </button>
+                        <div class="ms-auto">
+                            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                        {% else %}
+                        <span><strong>{{ followers_count }}</strong> Followers</span>
+                        <span><strong>{{ following_count }}</strong> Following</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if not is_own_profile %}
+                        {% if is_following %}
+                        <form action="{{ url_for('unfollow_user', user_id=profile_user[0]) }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-outline-danger">Unfollow</button>
+                        </form>
+                        {% elif has_pending_request %}
+                        <button type="button" class="btn btn-secondary" disabled>Request Sent</button>
+                        {% else %}
+                        <form action="{{ url_for('follow_user', user_id=profile_user[0]) }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-primary">Send Follow Request</button>
+                        </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <hr>
+
+            {% if is_own_profile %}
+            <!-- Followers List -->
+            {% if followers and followers|length > 0 %}
+            <div class="collapse mb-4" id="followersList">
+                <h4>Followers</h4>
+                <div class="row mt-3">
+                    {% for follower in followers %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-secondary text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ follower[1] }}</h5>
+                                <p class="card-text text-muted small">{{ follower[2] }}</p>
+                                <a href="{{ url_for('user_profile', user_id=follower[0]) }}" class="btn btn-primary btn-sm me-2">View Profile</a>
+                                <form action="{{ url_for('remove_follower', user_id=follower[0]) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove this follower?');">Remove</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Following List -->
+            {% if following and following|length > 0 %}
+            <div class="collapse mb-4" id="followingList">
+                <h4>Following</h4>
+                <div class="row mt-3">
+                    {% for followed_user in following %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-secondary text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ followed_user[1] }}</h5>
+                                <p class="card-text text-muted small">{{ followed_user[2] }}</p>
+                                <a href="{{ url_for('user_profile', user_id=followed_user[0]) }}" class="btn btn-primary btn-sm me-2">View Profile</a>
+                                <form action="{{ url_for('unfollow_user', user_id=followed_user[0]) }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="return_to" value="own_profile">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Unfollow</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            {% if is_own_profile and pending_requests %}
+            <div class="mb-4">
+                <h3>Pending Follow Requests</h3>
+                <div class="row mt-3">
+                    {% for request in pending_requests %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-secondary text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ request[5] }}</h5>
+                                <p class="card-text text-muted small">{{ request[6] }}</p>
+                                <div class="d-flex gap-2">
+                                    <form action="{{ url_for('accept_follow_request', request_id=request[0]) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-success btn-sm">Accept</button>
+                                    </form>
+                                    <form action="{{ url_for('reject_follow_request', request_id=request[0]) }}" method="POST" class="d-inline">
+                                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <hr>
+            {% endif %}
+
+            <h3>Watchlist</h3>
+            {% if watchlist %}
+            <div class="row mt-3">
+                {% for movie in watchlist %}
+                <div class="col-md-2 col-sm-4 mb-3">
+                    <a href="{{ url_for('movie_details', movie_id=movie[0]) }}">
+                        <img src="https://image.tmdb.org/t/p/w200{{ movie[2] }}" alt="{{ movie[1] }}" class="img-fluid rounded">
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">No movies in watchlist.</p>
+            {% endif %}
+
+            <hr class="my-4">
+
+            <h3>Playlists</h3>
+            {% if playlists %}
+            <div class="row mt-3">
+                {% for playlist in playlists %}
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ playlist[2] }}</h5>
+                            <p class="card-text">{{ playlist[3] or 'No description' }}</p>
+                            <p class="small text-muted">{{ playlist[7] or 0 }} movies</p>
+                            <a href="{{ url_for('view_playlist', playlist_id=playlist[0]) }}" class="btn btn-primary btn-sm">View</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">No playlists yet.</p>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer class="footer bg-black text-center py-3">
+        <p class="mb-0">&copy; 2025 Recflix. All rights reserved.</p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

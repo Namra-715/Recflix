@@ -185,6 +185,37 @@
     opacity: 1;
 }
 
+.play-overlay {
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px 14px;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.item:hover .play-overlay {
+    opacity: 1;
+}
+
+.search-result-card {
+    width: 200px;
+    margin: 0 10px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#search-results .item {
+    width: 200px;
+}
+
+#search-results .item img {
+    width: 200px;
+    height: 300px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
 /* Footer */
 .footer {
     text-align: center;
@@ -242,6 +273,26 @@
 
 .item:hover img {
     filter: brightness(1.0);
+}
+
+/* Make poster links work properly */
+.poster-link {
+    text-decoration: none;
+    display: block;
+}
+
+.poster-link:hover {
+    text-decoration: none;
+}
+
+/* Ensure play button form doesn't interfere with poster link */
+.play-button-form {
+    z-index: 5;
+    pointer-events: none;
+}
+
+.play-button-form button {
+    pointer-events: auto;
 }
 
 
@@ -314,6 +365,15 @@
 .star-rating label:hover,
 .star-rating label:hover ~ label {
   color: gold;
+}
+
+/* Ensure playlist dropdown stays in place */
+#playlistDropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute !important;
 }
 
 

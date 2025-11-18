@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Users - Recflix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/dashboard.css">
+</head>
+<body class="bg-dark text-white">
+    <header class="header bg-black">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center py-2">
+                <a href="{{ url_for('dashboard') }}" class="logo text-danger fw-bold fs-3 text-decoration-none">Recflix</a>
+                <nav class="nav">
+                    <a href="{{ url_for('dashboard') }}" class="nav-link text-white">Home</a>
+                    <a href="{{ url_for('my_playlists') }}" class="nav-link text-white">My Playlists</a>
+                    <a href="{{ url_for('browse_playlists') }}" class="nav-link text-white">Browse Playlists</a>
+                    <a href="{{ url_for('search_users') }}" class="nav-link text-white">Find Users</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard container-fluid py-4">
+        <div class="container my-5">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1>Find Users</h1>
+                    <p class="text-muted">Search for users by name or email to follow them and see what they're watching</p>
+                </div>
+            </div>
+
+            <!-- Search Form -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <form action="{{ url_for('search_users') }}" method="GET" class="d-flex gap-2">
+                        <input type="text" name="q" class="form-control bg-secondary text-white border-0" 
+                               placeholder="Search by name or email..." value="{{ query }}" required>
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </form>
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- Search Results -->
+            {% if query %}
+                {% if users %}
+                <h3>Search Results for "{{ query }}"</h3>
+                <div class="row mt-3">
+                    {% for user in users %}
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="card bg-secondary text-white">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ user[1] }}</h5>
+                                <p class="card-text text-muted small">{{ user[2] }}</p>
+                                <a href="{{ url_for('user_profile', user_id=user[0]) }}" class="btn btn-primary btn-sm">View Profile</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <p class="mb-0">No users found matching "{{ query }}". Try a different search term.</p>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-secondary">
+                    <p class="mb-0">Enter a name or email above to search for users.</p>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer class="footer bg-black text-center py-3">
+        <p class="mb-0">&copy; 2025 Recflix. All rights reserved.</p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

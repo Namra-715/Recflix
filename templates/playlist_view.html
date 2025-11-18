@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ playlist[2] }} - Recflix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/dashboard.css">
+</head>
+<body class="bg-dark text-white">
+    <header class="header bg-black">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center py-2">
+                <a href="{{ url_for('dashboard') }}" class="logo text-danger fw-bold fs-3 text-decoration-none">Recflix</a>
+                <nav class="nav">
+                    <a href="{{ url_for('dashboard') }}" class="nav-link text-white">Home</a>
+                    <a href="{{ url_for('my_playlists') }}" class="nav-link text-white">My Playlists</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard container-fluid py-4">
+        <div class="container my-5">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1>{{ playlist[2] }}</h1>
+                    <p class="text-muted">Created by {{ playlist[8] }}</p>
+                    {% if playlist[3] %}
+                    <p>{{ playlist[3] }}</p>
+                    {% endif %}
+                    <p class="small">
+                        <span class="badge bg-{{ 'success' if playlist[4] else 'secondary' }}">
+                            {{ 'Public' if playlist[4] else 'Private' }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            <hr>
+
+            <h3>Movies ({{ movies|length }})</h3>
+            {% if movies %}
+            <div class="d-flex justify-content-start flex-wrap mt-3">
+                {% for movie in movies %}
+                <div class="item mx-2 position-relative mb-4" style="cursor: pointer;">
+                    <a href="{{ url_for('movie_details', movie_id=movie[2]) }}" class="d-block poster-link">
+                        <img src="https://image.tmdb.org/t/p/w200{{ movie[6] }}"
+                            alt="{{ movie[5] }}" class="img-fluid rounded">
+                    </a>
+                    <form action="{{ url_for('already_watched') }}" method="POST"
+                        onsubmit="return playMovie('{{ movie[5] }}')"
+                        class="position-absolute top-50 start-50 translate-middle play-button-form">
+                        <input type="hidden" name="movie_id" value="{{ movie[2] }}">
+                        <input type="hidden" name="title" value="{{ movie[5] }}">
+                        <input type="hidden" name="poster_path" value="{{ movie[6] }}">
+                        <button type="submit" class="btn p-0 border-0 bg-transparent" onclick="event.stopPropagation();">
+                            <div class="overlay play-overlay text-white fw-bold">
+                                ▶ Play
+                            </div>
+                        </button>
+                    </form>
+                    {% if is_owner or access_level == 'collaborator' %}
+                    <form action="{{ url_for('remove_from_playlist', playlist_id=playlist[0]) }}" method="POST"
+                        class="position-absolute bottom-0 start-0 p-2">
+                        <input type="hidden" name="movie_id" value="{{ movie[2] }}">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="event.stopPropagation();">Remove</button>
+                    </form>
+                    {% endif %}
+                    <p class="text-white text-center mt-2 mb-0" style="width: 200px;">{{ movie[5] }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">No movies in this playlist yet.</p>
+            {% endif %}
+
+            {% if collaborators %}
+            <hr class="my-4">
+            <h4>Collaborators</h4>
+            <ul>
+                {% for collab in collaborators %}
+                <li>{{ collab[3] }} ({{ collab[4] }})</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if is_owner %}
+            <hr class="my-4">
+            <h4>Share Playlist</h4>
+            <form action="{{ url_for('share_playlist', playlist_id=playlist[0]) }}" method="POST" class="d-inline-flex gap-2">
+                <input type="number" class="form-control bg-secondary text-white" name="user_id" placeholder="User ID" required>
+                <button type="submit" class="btn btn-primary">Share</button>
+            </form>
+            {% endif %}
+        </div>
+    </main>
+
+    <footer class="footer bg-black text-center py-3">
+        <p class="mb-0">&copy; 2025 Recflix. All rights reserved.</p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function playMovie(title) {
+            alert(`Playing: ${title}`); // Replace with real logic
+        }
+    </script>
+</body>
+</html>
+

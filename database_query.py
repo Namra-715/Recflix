@@ -7,6 +7,7 @@ Supports filtering and querying movies with various criteria.
 import sys
 import subprocess
 from typing import Dict, List, Optional, Any
+from sql_queries import BASE_MOVIE_QUERY
 
 
 def check_and_install_dependencies():
@@ -72,10 +73,10 @@ USE_HARDCODED_CONFIG = True  # Set to False to be prompted for credentials each 
 
 # MySQL Connection Settings
 MYSQL_CONFIG = {
-    'host': '',
+    'host': '35.188.165.105',
     'database': 'Recflix',  # Change this to your database name
-    'user': 'root',  # Change this to your MySQL username
-    'password': '',  # Leave empty if no password, or set your password here
+    'user': 'namra',  # Change this to your MySQL username
+    'password': 'recflixdb',  # Leave empty if no password, or set your password here
     'port': 3306
 }
 # ============================================================================
@@ -170,7 +171,7 @@ class MovieDatabase:
         Returns:
             Tuple of (query_string, params_tuple)
         """
-        base_query = "SELECT * FROM movies WHERE 1=1"
+        base_query = BASE_MOVIE_QUERY
         params = []
         conditions = []
         
