@@ -345,3 +345,66 @@ GET_PLAYLIST_COLLABORATORS = """
 # Remove collaborator
 DELETE_COLLABORATOR = "DELETE FROM playlist_collaborators WHERE playlist_id=%s AND user_id=%s"
 
+
+
+GET_LIKED_MOVIES = """
+SELECT m.id, m.title, m.poster_path
+FROM user_likes_dislikes l
+JOIN movies m ON l.movie_id = m.id
+WHERE l.user_id = %s
+  AND l.liked_disliked = 'Y'
+"""
+
+
+GET_USER_LIKE_STATUS = """
+SELECT liked_disliked
+FROM user_likes_dislikes
+WHERE user_id = %s AND movie_id = %s
+"""
+
+
+# --- Preferences Page ---
+GET_DISTINCT_LANGUAGES = """
+SELECT DISTINCT original_language
+FROM movies
+WHERE original_language IS NOT NULL
+"""
+
+GET_ALL_GENRES = """
+SELECT genres
+FROM movies
+WHERE genres IS NOT NULL
+"""
+
+DELETE_USER_PREFERENCES = """
+DELETE FROM user_preferences
+WHERE user_id = %s
+"""
+
+INSERT_LANGUAGE_PREFERENCE = """
+INSERT INTO user_preferences (user_id, preference_type, preference_value)
+VALUES (%s, 'language', %s)
+"""
+
+INSERT_GENRE_PREFERENCE = """
+INSERT INTO user_preferences (user_id, preference_type, preference_value)
+VALUES (%s, 'genre', %s)
+"""
+
+# --- Like / Dislike ---
+CHECK_LIKE_STATUS = """
+SELECT liked_disliked
+FROM user_likes_dislikes
+WHERE user_id=%s AND movie_id=%s
+"""
+
+UPDATE_LIKE_STATUS = """
+UPDATE user_likes_dislikes
+SET liked_disliked=%s, updated_at=%s
+WHERE user_id=%s AND movie_id=%s
+"""
+
+INSERT_LIKE_STATUS = """
+INSERT INTO user_likes_dislikes (user_id, movie_id, liked_disliked)
+VALUES (%s, %s, %s)
+"""

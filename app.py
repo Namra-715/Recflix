@@ -15,8 +15,15 @@ from sql_queries import (
     INSERT_PLAYLIST, GET_USER_PLAYLISTS, GET_PUBLIC_PLAYLISTS, GET_PLAYLIST_DETAILS,
     CHECK_PLAYLIST_ACCESS, GET_PLAYLIST_MOVIES, INSERT_PLAYLIST_MOVIE, DELETE_PLAYLIST_MOVIE,
     CHECK_PLAYLIST_MOVIE_EXISTS, UPDATE_PLAYLIST, DELETE_PLAYLIST,
-    INSERT_COLLABORATOR, GET_PLAYLIST_COLLABORATORS, DELETE_COLLABORATOR
+    INSERT_COLLABORATOR, GET_PLAYLIST_COLLABORATORS, DELETE_COLLABORATOR,GET_LIKED_MOVIES,GET_USER_LIKE_STATUS,GET_DISTINCT_LANGUAGES, GET_ALL_GENRES,
+    DELETE_USER_PREFERENCES, INSERT_LANGUAGE_PREFERENCE, INSERT_GENRE_PREFERENCE,
+    CHECK_LIKE_STATUS, UPDATE_LIKE_STATUS, INSERT_LIKE_STATUS
 )
+import langcodes
+import json
+from recommender import hybrid_recommendations
+import time
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -193,7 +200,30 @@ def dashboard():
     except Exception as e:
         pending_requests = []
         print(f"Error fetching pending requests: {e}")
-   
+
+    # 🎯 --- Get Personalized Recommendations ---
+    try:
+        recommendations = hybrid_recommendations(user_id, cur)
+    except Exception as e:
+        print("Recommendation error:", e)
+        recommendations = []
+
+
+    cur.execute(GET_LIKED_MOVIES, (user_id,))
+    rows = cur.fetchall()
+
+    liked_movies = [
+    {
+        'id': row[0],
+        'title': row[1],
+        'poster_path': row[2]
+    }
+    for row in rows
+    if has_poster_path(row[2])
+    ]
+
+
+
     cur.close()
 
     return render_template(
@@ -208,7 +238,9 @@ def dashboard():
         already_watched=already_watched,
         followed_users_movies=followed_users_movies,
         reviewed_movies=reviewed_movies,
-        pending_requests=pending_requests
+        pending_requests=pending_requests,
+        recommendations=recommendations,
+        liked_movies=liked_movies
     )
 
 #create watch list
@@ -336,6 +368,17 @@ def movie_details(movie_id):
     # First try to get from already_watched (if user has watched it)
     cur.execute(GET_MOVIE_DETAILS, (user_id, movie_id))
     result = cur.fetchone()
+
+        # Fetch user's like/dislike status for this movie
+    try:
+        cur.execute(GET_USER_LIKE_STATUS, (user_id, movie_id))
+        row = cur.fetchone()
+        user_likes_dislikes = {movie_id: row[0]} if row else {}
+    except Exception as e:
+        user_likes_dislikes = {}
+        print(f"Error fetching like/dislike: {e}")
+
+
     
     if result:
         # Movie is in already_watched
@@ -351,7 +394,8 @@ def movie_details(movie_id):
             in_watched=True,
             reviews=reviews,
             user_reviewed=user_reviewed,
-            user_playlists=user_playlists
+            user_playlists=user_playlists,
+            user_likes_dislikes=user_likes_dislikes 
         )
     else:
         # Movie not in already_watched, get from movies table directly
@@ -374,7 +418,8 @@ def movie_details(movie_id):
             in_watched=False,
             reviews=reviews,
             user_reviewed=user_reviewed,
-            user_playlists=user_playlists
+            user_playlists=user_playlists,
+            user_likes_dislikes=user_likes_dislikes
         )
 
 #reviews
@@ -937,6 +982,157 @@ def share_playlist(playlist_id):
     
     cur.close()
     return redirect(url_for('view_playlist', playlist_id=playlist_id))
+
+
+
+@app.route("/preferences")
+def preferences():
+    if 'user_id' not in session:
+        flash("Please login first.", "warning")
+        return redirect(url_for('login'))
+
+    cur = mysql.connection.cursor()
+
+    FAMOUS_LANGUAGES = ["English", "Spanish", "French", "German", "Japanese",
+                        "Korean", "Hindi", "Chinese", "Italian", "Portuguese"]
+
+    # Get all languages
+    cur.execute(GET_DISTINCT_LANGUAGES)
+    lang_rows = cur.fetchall()
+    language_codes = [row[0] for row in lang_rows]
+
+    all_languages = []
+    for code in language_codes:
+        try:
+            full_name = langcodes.Language.get(code).display_name()
+        except:
+            full_name = code.upper()
+        all_languages.append({"code": code, "name": full_name})
+
+    famous_languages = [lang for lang in all_languages if lang["name"] in FAMOUS_LANGUAGES]
+
+    # --- Genres ---
+    cur.execute(GET_ALL_GENRES)
+    rows = cur.fetchall()
+    cur.close()
+
+    VALID_GENRES = [
+        "Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary",
+        "Drama", "Family", "Fantasy", "History", "Horror", "Music",
+        "Mystery", "Romance", "Sci-Fi", "Thriller", "War", "Western"
+    ]
+
+    all_genres = set()
+    for row in rows:
+        for g in row[0].split(','):
+            g = g.strip()
+            if g in VALID_GENRES:
+                all_genres.add(g)
+
+    genres = [{"name": g} for g in sorted(all_genres)]
+
+    return render_template("preferences.html",
+                           all_languages=all_languages,
+                           languages=famous_languages,
+                           genres=genres)
+
+
+
+@app.route("/save_preferences", methods=["POST"])
+def save_preferences():
+    if 'user_id' not in session:
+        flash("Please login first.", "warning")
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    selected_languages = request.form.getlist('languages[]')
+    selected_genres = request.form.getlist('genres[]')
+
+    cur = None
+    try:
+        cur = mysql.connection.cursor()
+
+        # Clear user's old preferences
+        cur.execute(DELETE_USER_PREFERENCES, [user_id])
+
+        # Insert languages
+        for lang in selected_languages:
+            cur.execute(INSERT_LANGUAGE_PREFERENCE, (user_id, lang))
+
+        # Insert genres
+        for genre in selected_genres:
+            cur.execute(INSERT_GENRE_PREFERENCE, (user_id, genre))
+
+        mysql.connection.commit()
+        flash("Your preferences have been saved!", "success")
+
+    except Exception as e:
+        mysql.connection.rollback()
+        print("Database error:", e)
+        flash("An error occurred while saving your preferences.", "danger")
+
+    finally:
+        if cur:
+            cur.close()
+
+    return redirect(url_for('preferences'))
+
+
+@app.route('/recommendations')
+def recommendations():
+    if 'user_id' not in session:
+        flash("Please login first.", "warning")
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    cur = mysql.connection.cursor()
+
+    start = time.time()
+    try:
+        recs = hybrid_recommendations(user_id, cur, top_k=20, content_weight=0.6, cf_weight=0.4)
+    except Exception as e:
+        print("Error generating recommendations:", e)
+        recs = []
+    cur.close()
+    elapsed = time.time() - start
+    # optionally flash short info: flash(f"Generated {len(recs)} recommendations in {elapsed:.2f}s", "info")
+    return render_template('dashboard.html', recommendations=recs)
+
+
+@app.route("/movie/like_dislike", methods=["POST"])
+def update_like_dislike():
+    if 'user_id' not in session:
+        flash("Please login first.", "warning")
+        return redirect(url_for("login"))
+
+    user_id = session['user_id']
+    movie_id = int(request.form.get("movie_id"))
+    action = request.form.get("action")  # like or dislike
+
+    liked_disliked = "Y" if action == "like" else "N"
+
+    cur = mysql.connection.cursor()
+
+    # Check if entry exists
+    cur.execute(CHECK_LIKE_STATUS, (user_id, movie_id))
+    row = cur.fetchone()
+
+    if row:
+        current = row[0]
+        if current == liked_disliked:
+            flash(f"You have already {'liked' if current=='Y' else 'disliked'} this movie.", "info")
+        else:
+            cur.execute(UPDATE_LIKE_STATUS, (liked_disliked, datetime.now(), user_id, movie_id))
+            flash(f"{'Liked' if liked_disliked=='Y' else 'Disliked'} successfully.", "success")
+    else:
+        cur.execute(INSERT_LIKE_STATUS, (user_id, movie_id, liked_disliked))
+        flash(f"{'Liked' if liked_disliked=='Y' else 'Disliked'} successfully.", "success")
+
+    mysql.connection.commit()
+    cur.close()
+
+    return redirect(request.referrer or url_for("movieDetails"))
+
 
 
 # Logout

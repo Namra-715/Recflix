@@ -18,7 +18,8 @@
     <header class="header bg-black">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center py-2">
-                <a href="{{ url_for('dashboard') }}" class="logo text-danger fw-bold fs-3 text-decoration-none">Recflix</a>
+                <a href="{{ url_for('dashboard') }}"
+                    class="logo text-danger fw-bold fs-3 text-decoration-none">Recflix</a>
                 <nav class="nav">
                     <a href="{{ url_for('dashboard') }}" class="nav-link text-white">Home</a>
                     <a href="{{ url_for('my_playlists') }}" class="nav-link text-white">My Playlists</a>
@@ -33,6 +34,7 @@
                         </span>
                     </a>
                     {% endif %}
+                    <a href="{{ url_for('preferences') }}" class="nav-link text-white">Preferences</a>
                 </nav>
                 <div class="d-flex align-items-center">
                     <!-- Functional search form -->
@@ -75,7 +77,8 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h5 class="mb-1">
-                        <i class="fas fa-bell"></i> You have {{ pending_requests|length }} pending follow request{{ 's' if pending_requests|length != 1 else '' }}
+                        <i class="fas fa-bell"></i> You have {{ pending_requests|length }} pending follow request{{ 's'
+                        if pending_requests|length != 1 else '' }}
                     </h5>
                     <p class="mb-0 text-muted">Click below to view and respond to requests</p>
                 </div>
@@ -90,17 +93,18 @@
             <hr>
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="mb-0">Search Results for "{{ search_query }}"</h4>
-                <small class="text-muted">{{ search_results|length }} result{{ 's' if search_results|length != 1 else '' }}</small>
+                <small class="text-muted">{{ search_results|length }} result{{ 's' if search_results|length != 1 else ''
+                    }}</small>
             </div>
             <div class="d-flex flex-wrap justify-content-start">
                 {% for movie in search_results %}
                 {% set poster_url = 'https://via.placeholder.com/200x300?text=No+Image' %}
                 {% if movie.poster_path %}
-                    {% if movie.poster_path.startswith('http') %}
-                        {% set poster_url = movie.poster_path %}
-                    {% else %}
-                        {% set poster_url = 'https://image.tmdb.org/t/p/w200' + movie.poster_path %}
-                    {% endif %}
+                {% if movie.poster_path.startswith('http') %}
+                {% set poster_url = movie.poster_path %}
+                {% else %}
+                {% set poster_url = 'https://image.tmdb.org/t/p/w200' + movie.poster_path %}
+                {% endif %}
                 {% endif %}
                 <div class="search-result-card mx-2 mb-4 text-center">
                     <div class="item position-relative">
@@ -113,9 +117,9 @@
                             <input type="hidden" name="movie_id" value="{{ movie.id }}">
                             <input type="hidden" name="title" value="{{ movie.title }}">
                             <input type="hidden" name="poster_path" value="{{ movie.poster_path }}">
-                            <button type="submit" class="btn p-0 border-0 bg-transparent" onclick="event.stopPropagation();">
-                                <div
-                                    class="overlay play-overlay text-white fw-bold">
+                            <button type="submit" class="btn p-0 border-0 bg-transparent"
+                                onclick="event.stopPropagation();">
+                                <div class="overlay play-overlay text-white fw-bold">
                                     ▶ Play
                                 </div>
                             </button>
@@ -125,7 +129,8 @@
                             <input type="hidden" name="movie_id" value="{{ movie.id }}">
                             <input type="hidden" name="title" value="{{ movie.title }}">
                             <input type="hidden" name="poster_path" value="{{ movie.poster_path }}">
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="event.stopPropagation();">+ Add</button>
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="event.stopPropagation();">+
+                                Add</button>
                         </form>
                     </div>
                     <div class="movie-meta mt-2">
@@ -150,10 +155,12 @@
                             <h5 class="card-title">{{ request[5] }}</h5>
                             <p class="card-text text-muted small">{{ request[6] }}</p>
                             <div class="d-flex gap-2">
-                                <form action="{{ url_for('accept_follow_request', request_id=request[0]) }}" method="POST" class="d-inline">
+                                <form action="{{ url_for('accept_follow_request', request_id=request[0]) }}"
+                                    method="POST" class="d-inline">
                                     <button type="submit" class="btn btn-success btn-sm">Accept</button>
                                 </form>
-                                <form action="{{ url_for('reject_follow_request', request_id=request[0]) }}" method="POST" class="d-inline">
+                                <form action="{{ url_for('reject_follow_request', request_id=request[0]) }}"
+                                    method="POST" class="d-inline">
                                     <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                                 </form>
                             </div>
@@ -184,6 +191,7 @@
                         <div class="d-flex justify-content-center flex-wrap">
                             {% for movie in trending_movies[slide_index:slide_index + movies_per_slide] %}
                             <div class="item mx-2 position-relative" style="cursor: pointer;">
+
                                 <a href="{{ url_for('movie_details', movie_id=movie.id) }}" class="d-block poster-link">
                                     <img src="https://image.tmdb.org/t/p/w200{{ movie.poster_path }}"
                                         alt="{{ movie.title }}" class="img-fluid rounded">
@@ -194,9 +202,9 @@
                                     <input type="hidden" name="movie_id" value="{{ movie.id }}">
                                     <input type="hidden" name="title" value="{{ movie.title }}">
                                     <input type="hidden" name="poster_path" value="{{ movie.poster_path }}">
-                                    <button type="submit" class="btn p-0 border-0 bg-transparent" onclick="event.stopPropagation();">
-                                        <div
-                                            class="overlay play-overlay text-white fw-bold">
+                                    <button type="submit" class="btn p-0 border-0 bg-transparent"
+                                        onclick="event.stopPropagation();">
+                                        <div class="overlay play-overlay text-white fw-bold">
                                             ▶ Play
                                         </div>
                                     </button>
@@ -206,8 +214,10 @@
                                     <input type="hidden" name="movie_id" value="{{ movie.id }}">
                                     <input type="hidden" name="title" value="{{ movie.title }}">
                                     <input type="hidden" name="poster_path" value="{{ movie.poster_path }}">
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="event.stopPropagation();">+ Add</button>
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="event.stopPropagation();">+ Add</button>
                                 </form>
+
                             </div>
                             {% endfor %}
                         </div>
@@ -238,8 +248,8 @@
             <div id="followed-movies-carousel" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-indicators">
                     {% for i in range((followed_users_movies|length // 6) + 1) %}
-                    <button type="button" data-bs-target="#followed-movies-carousel" data-bs-slide-to="{{ i }}" 
-                        {% if i==0 %}class="active"{% endif %} aria-label="Slide {{ i + 1 }}"></button>
+                    <button type="button" data-bs-target="#followed-movies-carousel" data-bs-slide-to="{{ i }}" {% if
+                        i==0 %}class="active" {% endif %} aria-label="Slide {{ i + 1 }}"></button>
                     {% endfor %}
                 </div>
                 <div class="carousel-inner">
@@ -259,7 +269,8 @@
                                     <input type="hidden" name="movie_id" value="{{ movie.id }}">
                                     <input type="hidden" name="title" value="{{ movie.title }}">
                                     <input type="hidden" name="poster_path" value="{{ movie.poster_path }}">
-                                    <button type="submit" class="btn p-0 border-0 bg-transparent" onclick="event.stopPropagation();">
+                                    <button type="submit" class="btn p-0 border-0 bg-transparent"
+                                        onclick="event.stopPropagation();">
                                         <div class="overlay play-overlay text-white fw-bold">
                                             ▶ Play
                                         </div>
@@ -270,7 +281,8 @@
                                     <input type="hidden" name="movie_id" value="{{ movie.id }}">
                                     <input type="hidden" name="title" value="{{ movie.title }}">
                                     <input type="hidden" name="poster_path" value="{{ movie.poster_path }}">
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="event.stopPropagation();">+ Add</button>
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                        onclick="event.stopPropagation();">+ Add</button>
                                 </form>
                             </div>
                             {% endfor %}
@@ -318,16 +330,20 @@
                         <!-- Buttons -->
                         <div class="d-flex justify-content-center gap-2 mt-1">
                             <div class="d-flex justify-content-center gap-2 mt-1">
-                                <button class="btn btn-outline-success btn-sm"
-                                    onclick="likeMovie('{{ movie[0] }}')">👍</button>
-                                <button class="btn btn-outline-danger btn-sm"
-                                    onclick="dislikeMovie('{{ movie[0] }}')">👎</button>
+                                
 
                                 {% if movie[0] not in reviewed_movies %}
                                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal"
                                     data-bs-target="#reviewModal"
-                                    onclick="setMovieData('{{ movie[0] }}', '{{ movie[1] }}')">Review</button>
+                                    onclick="setMovieData('{{ movie[0] }}', '{{ movie[1] }}')">
+                                    Review
+                                </button>
+                                {% else %}
+                                <span class="badge bg-secondary" style="font-size: 0.75rem;">
+                                    You already reviewed this movie
+                                </span>
                                 {% endif %}
+
                             </div>
 
                         </div>
@@ -386,6 +402,10 @@
             </div>
         </div>
 
+
+
+
+
         <!---WatchList-->
         <hr class="my-4">
         <h3 class="text-white">🎬 Your Watchlist</h3>
@@ -403,7 +423,8 @@
                         <h6 class="card-title">{{ movie[1] }}</h6>
                         <form action="{{ url_for('remove_from_watchlist') }}" method="POST">
                             <input type="hidden" name="movie_id" value="{{ movie[0] }}">
-                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="event.stopPropagation();">Remove</button>
+                            <button type="submit" class="btn btn-outline-danger btn-sm"
+                                onclick="event.stopPropagation();">Remove</button>
                         </form>
                     </div>
                 </div>
@@ -414,7 +435,136 @@
         <p class="text-muted mt-3">Your watchlist is empty. Start adding movies!</p>
         {% endif %}
 
+        <!---Recommended Movies based on your interests-->
+        <hr class="my-4">
+        {% block content %}
+        <div>
+            <h2>Recommended for you</h2>
+            {% if recommendations %}
+            <div id="recommendationCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% for m in recommendations|batch(4, fill_with=None) %}
+                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                        <div class="d-flex justify-content-center flex-wrap">
+                            {% for movie in m %}
+                            {% if movie.poster_path %}
+                            <div class="card me-3" style="width: 18rem;">
+                                {% if movie.poster_path %}
+                                <img src="{{ movie.poster_path }}" class="card-img-top" alt="{{ movie.title }}">
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ movie.title }}</h5>
+                                    <!-- <p class="card-text">Score: {{ '%.2f'|format(movie.score) }}</p> -->
+                                    <!-- <p class="card-text">You might like this: {{ (movie.score * 100)|round(0) }}%</p> -->
 
+                                    <a href="{{ url_for('movie_details', movie_id=movie.movie_id) }}"
+                                        class="btn btn-primary">View</a>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <button class="carousel-control-prev" type="button" data-bs-target="#recommendationCarousel"
+                    data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#recommendationCarousel"
+                    data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+            {% else %}
+            <div class="alert alert-info">We couldn't generate recommendations yet. Try rating some movies or setting
+                your preferences in <a href="{{ url_for('preferences') }}">Preferences</a>.</div>
+            {% endif %}
+        </div>
+        {% endblock %}
+
+
+        <!---User likes-->
+        <hr class="my-4">
+
+        {% set valid_liked = liked_movies | selectattr("poster_path") | list %}
+
+        {% if valid_liked|length > 0 %}
+
+        <h3>Movies You Liked</h3>
+
+        {# --------------------------------------------- #}
+        {# CASE 1 → More than 4 movies → SHOW CAROUSEL #}
+        {# --------------------------------------------- #}
+        {% if valid_liked|length > 4 %}
+        <div id="likedMoviesCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+
+                {% for group in valid_liked|batch(4, fill_with=None) %}
+                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                    <div class="d-flex justify-content-center flex-wrap">
+
+                        {% for movie in group %}
+                        {% if movie %}
+                        <div class="card mx-2" style="width: 12rem;">
+                            <img src="https://image.tmdb.org/t/p/w200{{ movie.poster_path }}"
+                                class="card-img-top rounded" alt="{{ movie.title }}">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ movie.title }}</h6>
+
+                                <a href="{{ url_for('movie_details', movie_id=movie.id) }}"
+                                    class="btn btn-primary btn-sm w-100">
+                                    View
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+
+            <!-- Carousel controls -->
+            <button class="carousel-control-prev" type="button" data-bs-target="#likedMoviesCarousel"
+                data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#likedMoviesCarousel"
+                data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
+        </div>
+
+        {# --------------------------------------------- #}
+        {# CASE 2 → 4 or fewer movies → SHOW STATIC CARDS #}
+        {# --------------------------------------------- #}
+        {% else %}
+        <div class="d-flex justify-content-center flex-wrap mt-3">
+
+            {% for movie in valid_liked %}
+            <div class="card mx-2 mb-3" style="width: 12rem;">
+                <img src="https://image.tmdb.org/t/p/w200{{ movie.poster_path }}" class="card-img-top rounded"
+                    alt="{{ movie.title }}">
+                <div class="card-body">
+                    <h6 class="card-title">{{ movie.title }}</h6>
+
+                    <a href="{{ url_for('movie_details', movie_id=movie.id) }}" class="btn btn-primary btn-sm w-100">
+                        View
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+        {% endif %}
+
+        {% endif %}
 
 
     </main>
@@ -427,6 +577,7 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JavaScript -->
+
     <script>
         // Placeholder for playing a movie
         function playMovie(title) {

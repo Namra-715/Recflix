@@ -82,7 +82,8 @@
 
 /* Dashboard Main */
 .dashboard {
-    margin-top: 80px; /* Account for fixed header */
+    margin-top: 80px;
+    /* Account for fixed header */
     padding: 20px;
 }
 
@@ -148,7 +149,8 @@
     overflow-x: auto;
     scroll-behavior: smooth;
     gap: 10px;
-    padding: 0 50px; /* Space for buttons */
+    padding: 0 50px;
+    /* Space for buttons */
 }
 
 .item {
@@ -230,19 +232,24 @@
         flex-direction: column;
         gap: 10px;
     }
+
     .nav {
         gap: 10px;
     }
+
     .search-bar {
         width: 150px;
     }
+
     .carousel-items {
         padding: 0 30px;
     }
+
     .item img {
         width: 150px;
         height: 225px;
     }
+
     .hero h1 {
         font-size: 2em;
     }
@@ -255,14 +262,18 @@
     transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
     /* Ensure the item is positioned relative so the overlay works and it can be z-indexed */
     position: relative;
-    z-index: 1; /* Default layer */
+    z-index: 1;
+    /* Default layer */
 }
 
 /* Hover effect: Scale up and add a shadow */
 .item:hover {
-    transform: scale(1.05); /* Zoom in 5% */
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7); /* Deep shadow */
-    z-index: 10; /* Bring the hovered item to the front */
+    transform: scale(1.05);
+    /* Zoom in 5% */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7);
+    /* Deep shadow */
+    z-index: 10;
+    /* Bring the hovered item to the front */
 }
 
 /* Optional: Make the image slightly darker when not hovered to make the hovered one pop */
@@ -300,9 +311,12 @@
 /* Card specific styling to give it a progress bar look */
 .continue-card {
     position: relative;
-    overflow: hidden; /* Important for the progress bar */
-    border: none; /* Remove default card border */
-    background-color: transparent; /* Make background transparent */
+    overflow: hidden;
+    /* Important for the progress bar */
+    border: none;
+    /* Remove default card border */
+    background-color: transparent;
+    /* Make background transparent */
     cursor: pointer;
 }
 
@@ -311,70 +325,89 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    height: 5px; /* Thickness of the bar */
-    background-color: #e50914; /* Netflix Red */
+    height: 5px;
+    /* Thickness of the bar */
+    background-color: #e50914;
+    /* Netflix Red */
 }
 
 .carousel-row .item,
 .continue-watching-row .item {
     /* Calculate width for 6 items plus margin (approx 15% each) */
-    width: calc(100% / 6 - 20px); /* 100% / 6 items, minus 20px for the mx-2 margin */
-    min-width: 150px; /* Ensure a minimum size */
-    margin-right: 10px !important; 
+    width: calc(100% / 6 - 20px);
+    /* 100% / 6 items, minus 20px for the mx-2 margin */
+    min-width: 150px;
+    /* Ensure a minimum size */
+    margin-right: 10px !important;
     margin-left: 10px !important;
 }
 
 /* Specific size adjustment for the image inside the movie item */
 .carousel-row .item img,
 .continue-watching-row .item img {
-    width: 100%; /* Make image fill the defined item width */
+    width: 100%;
+    /* Make image fill the defined item width */
     height: auto;
 }
 
 .footer {
-    text-align: center; /* Centers the text/content */
+    text-align: center;
+    /* Centers the text/content */
     padding: 20px;
     background-color: rgba(0, 0, 0, 0.9);
     color: #ccc;
-    width: 100%; /* Ensures it spans the full width */
-    position: relative; /* Prevents any floating issues */
-    margin-top: auto; /* Pushes it to the bottom if using flexbox on body/main */
+    width: 100%;
+    /* Ensures it spans the full width */
+    position: relative;
+    /* Prevents any floating issues */
+    margin-top: auto;
+    /* Pushes it to the bottom if using flexbox on body/main */
 }
 
 
 .star-rating {
-  direction: rtl;
-  display: inline-flex;
-  font-size: 2rem;
+    direction: rtl;
+    display: inline-flex;
+    font-size: 2rem;
 }
 
 .star-rating input {
-  display: none;
+    display: none;
 }
 
 .star-rating label {
-  color: #ddd;
-  cursor: pointer;
-  transition: color 0.2s;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s;
 }
 
-.star-rating input:checked ~ label {
-  color: gold;
+.star-rating input:checked~label {
+    color: gold;
 }
 
 .star-rating label:hover,
-.star-rating label:hover ~ label {
-  color: gold;
+.star-rating label:hover~label {
+    color: gold;
 }
 
 /* Ensure playlist dropdown stays in place */
 #playlistDropdown {
-  position: relative;
+    position: relative;
 }
 
 .dropdown-menu {
-  position: absolute !important;
+    position: absolute !important;
 }
 
 
 
+/* Highlight selected button */
+#likeBtn.active {
+    background-color: #28a745 !important;
+    color: white;
+}
+
+#dislikeBtn.active {
+    background-color: #dc3545 !important;
+    color: white;
+}
