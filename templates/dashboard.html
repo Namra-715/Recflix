@@ -15,7 +15,7 @@
 
 <body class="bg-dark text-white"> <!-- Bootstrap dark background for Netflix feel -->
     <!-- Header (Netflix-style nav) -->
-    <header class="header bg-black">
+    <!-- <header class="header bg-black">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center py-2">
                 <a href="{{ url_for('dashboard') }}"
@@ -37,7 +37,6 @@
                     <a href="{{ url_for('preferences') }}" class="nav-link text-white">Preferences</a>
                 </nav>
                 <div class="d-flex align-items-center">
-                    <!-- Functional search form -->
                     <form action="/dashboard" method="GET" class="d-inline me-3">
                         <div class="input-group" style="width: 400px;">
                             <input type="text" name="query" placeholder="Search movies..."
@@ -52,8 +51,110 @@
                 </div>
             </div>
         </div>
-    </header>
+    </header> -->
 
+
+    <header class="header bg-black">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center py-2 flex-wrap">
+                <!-- Logo -->
+                <a href="{{ url_for('dashboard') }}"
+                    class="logo text-danger fw-bold fs-3 text-decoration-none">Recflix</a>
+
+                <!-- Mobile Menu Toggle Button -->
+                <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon">
+                        <i class="fas fa-bars text-white fs-4"></i>
+                    </span>
+                </button>
+
+                <!-- Desktop Navigation & Search (Hidden on Mobile) -->
+                <div class="d-none d-lg-flex align-items-center gap-3 flex-grow-1 justify-content-between">
+                    <!-- Navigation Links -->
+                    <nav class="nav d-flex gap-2 flex-wrap">
+                        <a href="{{ url_for('dashboard') }}" class="nav-link text-white">Home</a>
+                        <a href="{{ url_for('my_playlists') }}" class="nav-link text-white">My Playlists</a>
+                        <a href="{{ url_for('browse_playlists') }}" class="nav-link text-white">Browse Playlists</a>
+                        <a href="{{ url_for('search_users') }}" class="nav-link text-white">Find Users</a>
+                        <a href="{{ url_for('user_profile', user_id=user_id) }}" class="nav-link text-white">My
+                            Profile</a>
+                        {% if pending_requests and pending_requests|length > 0 %}
+                        <a href="#pending-requests" class="nav-link text-white position-relative">
+                            <i class="fas fa-bell"></i> Requests
+                            <span
+                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                {{ pending_requests|length }}
+                            </span>
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('preferences') }}" class="nav-link text-white">Preferences</a>
+                    </nav>
+
+                    <!-- Search Form (Desktop) -->
+                    <form action="/dashboard" method="GET" class="d-inline">
+                        <div class="input-group" style="width: 300px;">
+                            <input type="text" name="query" placeholder="Search movies..."
+                                class="form-control bg-secondary text-white border-0" required
+                                value="{{ request.args.get('query', '') }}">
+                            <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Mobile/Tablet Collapsible Menu -->
+            <div class="collapse navbar-collapse d-lg-none" id="navbarNav">
+                <div class="py-3">
+                    <!-- Mobile Search Form -->
+                    <form action="/dashboard" method="GET" class="mb-3">
+                        <div class="input-group">
+                            <input type="text" name="query" placeholder="Search movies..."
+                                class="form-control bg-secondary text-white border-0" required
+                                value="{{ request.args.get('query', '') }}">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Mobile Navigation Links -->
+                    <nav class="nav flex-column gap-2">
+                        <a href="{{ url_for('dashboard') }}" class="nav-link text-white py-2 px-3 rounded hover-bg">
+                            <i class="fas fa-home me-2"></i> Home
+                        </a>
+                        <a href="{{ url_for('my_playlists') }}" class="nav-link text-white py-2 px-3 rounded hover-bg">
+                            <i class="fas fa-list me-2"></i> My Playlists
+                        </a>
+                        <a href="{{ url_for('browse_playlists') }}"
+                            class="nav-link text-white py-2 px-3 rounded hover-bg">
+                            <i class="fas fa-folder-open me-2"></i> Browse Playlists
+                        </a>
+                        <a href="{{ url_for('search_users') }}" class="nav-link text-white py-2 px-3 rounded hover-bg">
+                            <i class="fas fa-user-friends me-2"></i> Find Users
+                        </a>
+                        <a href="{{ url_for('user_profile', user_id=user_id) }}"
+                            class="nav-link text-white py-2 px-3 rounded hover-bg">
+                            <i class="fas fa-user me-2"></i> My Profile
+                        </a>
+                        {% if pending_requests and pending_requests|length > 0 %}
+                        <a href="#pending-requests"
+                            class="nav-link text-white py-2 px-3 rounded hover-bg position-relative">
+                            <i class="fas fa-bell me-2"></i> Requests
+                            <span class="badge rounded-pill bg-danger ms-2">
+                                {{ pending_requests|length }}
+                            </span>
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('preferences') }}" class="nav-link text-white py-2 px-3 rounded hover-bg">
+                            <i class="fas fa-cog me-2"></i> Preferences
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
     <!-- Main Dashboard Content -->
     <main class="dashboard container-fluid py-4">
 
@@ -330,7 +431,7 @@
                         <!-- Buttons -->
                         <div class="d-flex justify-content-center gap-2 mt-1">
                             <div class="d-flex justify-content-center gap-2 mt-1">
-                                
+
 
                                 {% if movie[0] not in reviewed_movies %}
                                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal"

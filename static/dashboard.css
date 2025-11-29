@@ -411,3 +411,130 @@
     background-color: #dc3545 !important;
     color: white;
 }
+
+
+
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.navbar-toggler {
+    background: transparent;
+    border: 2px solid #e50914;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.navbar-toggler:hover {
+    background: #e50914;
+}
+
+.navbar-toggler:focus {
+    box-shadow: none;
+    outline: 2px solid #e50914;
+}
+
+.hover-bg:hover {
+    background-color: rgba(229, 9, 20, 0.1);
+    border-left: 3px solid #e50914;
+}
+
+/* Mobile menu animation */
+.navbar-collapse {
+    background-color: #000;
+    border-top: 1px solid #333;
+}
+
+/* Responsive search width */
+@media (max-width: 1400px) {
+    .input-group {
+        width: 250px !important;
+    }
+}
+
+@media (max-width: 1200px) {
+    .input-group {
+        width: 200px !important;
+    }
+}
+
+/* Mobile styles */
+@media (max-width: 991px) {
+    .logo {
+        font-size: 1.5rem !important;
+    }
+
+    .navbar-collapse {
+        margin-top: 10px;
+    }
+
+    .nav-link {
+        font-size: 1rem;
+        border-bottom: 1px solid #333;
+    }
+
+    .nav-link:last-child {
+        border-bottom: none;
+    }
+
+    /* Full width search on mobile */
+    .input-group {
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .logo {
+        font-size: 1.25rem !important;
+    }
+
+    .header .py-2 {
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+    }
+
+    .navbar-toggler {
+        padding: 6px 10px;
+        font-size: 0.875rem;
+    }
+}
+
+/* Smooth transitions */
+.nav-link {
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #e50914 !important;
+}
+
+/* Ensure badge stays visible */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.25em 0.5em;
+}
+
+/* Desktop nav spacing */
+@media (min-width: 992px) {
+    .nav {
+        flex-wrap: nowrap;
+    }
+
+    .nav-link {
+        white-space: nowrap;
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 991px) {
+    .navbar-collapse .nav {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+}
