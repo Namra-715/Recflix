@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Search - Recflix</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-dark text-white">
+    <!-- Header -->
+    <header class="header bg-black">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center py-2">
+                <a href="{{ url_for('dashboard') }}" class="logo text-danger fw-bold fs-3 text-decoration-none">Recflix</a>
+                <nav class="nav">
+                    <a href="{{ url_for('dashboard') }}" class="nav-link text-white">Home</a>
+                    <a href="{{ url_for('my_playlists') }}" class="nav-link text-white">My Playlists</a>
+                    <a href="{{ url_for('browse_playlists') }}" class="nav-link text-white">Browse Playlists</a>
+                    <a href="{{ url_for('search_users') }}" class="nav-link text-white">Find Users</a>
+                    <a href="{{ url_for('user_profile', user_id=user_id) }}" class="nav-link text-white">My Profile</a>
+                </nav>
+                <div class="d-flex align-items-center">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-sm">
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container py-4">
+        <h1 class="mb-3">Advanced Search</h1>
+        <p class="text-muted mb-4">
+            Use multiple filters to find exactly what you want. Leave fields blank to ignore them.
+        </p>
+
+        <form method="GET" action="{{ url_for('advanced_search') }}" class="row g-3 mb-4">
+            <div class="col-md-4">
+                <label class="form-label">Title</label>
+                <input type="text" name="title" class="form-control bg-secondary text-white border-0"
+                    placeholder="Movie title" value="{{ form_values.title }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Genres</label>
+                <input type="text" name="genres" class="form-control bg-secondary text-white border-0"
+                    placeholder="Action, Drama" value="{{ form_values.genres }}">
+                <small class="text-muted">Comma-separated (matches any)</small>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Director</label>
+                <input type="text" name="director" class="form-control bg-secondary text-white border-0"
+                    placeholder="Director name" value="{{ form_values.director }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Cast</label>
+                <input type="text" name="cast" class="form-control bg-secondary text-white border-0"
+                    placeholder="Actor name" value="{{ form_values.cast }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Minimum Vote Average</label>
+                <input type="number" step="0.1" min="0" max="10" name="min_vote_average"
+                    class="form-control bg-secondary text-white border-0"
+                    placeholder="e.g. 7.5" value="{{ form_values.min_vote_average }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Minimum IMDb Rating</label>
+                <input type="number" step="0.1" min="0" max="10" name="min_imdb_rating"
+                    class="form-control bg-secondary text-white border-0"
+                    placeholder="e.g. 7.0" value="{{ form_values.min_imdb_rating }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Minimum Runtime (minutes)</label>
+                <input type="number" min="0" name="min_runtime"
+                    class="form-control bg-secondary text-white border-0"
+                    placeholder="e.g. 90" value="{{ form_values.min_runtime }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Original Language</label>
+                <input type="text" name="original_language" class="form-control bg-secondary text-white border-0"
+                    placeholder="e.g. en" value="{{ form_values.original_language }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Status</label>
+                <input type="text" name="status" class="form-control bg-secondary text-white border-0"
+                    placeholder="e.g. Released" value="{{ form_values.status }}">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Streaming Platform</label>
+                <select name="platform" class="form-select bg-secondary text-white border-0">
+                    <option value="" {% if not form_values.platform %}selected{% endif %}>Any</option>
+                    <option value="netflix" {% if form_values.platform == 'netflix' %}selected{% endif %}>Netflix</option>
+                    <option value="hulu" {% if form_values.platform == 'hulu' %}selected{% endif %}>Hulu</option>
+                    <option value="prime_video" {% if form_values.platform == 'prime_video' %}selected{% endif %}>Prime Video</option>
+                    <option value="disney_plus" {% if form_values.platform == 'disney_plus' %}selected{% endif %}>Disney+</option>
+                </select>
+            </div>
+
+            <div class="col-12 d-flex justify-content-end mt-3">
+                <a href="{{ url_for('advanced_search') }}" class="btn btn-outline-light me-2">Clear</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-1"></i> Search
+                </button>
+            </div>
+        </form>
+
+        {% if search_results is not none %}
+        <section class="mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0">Results</h4>
+                <small class="text-muted">
+                    {{ search_results|length }} result{{ 's' if search_results|length != 1 else '' }}
+                </small>
+            </div>
+
+            {% if search_results %}
+            <div class="d-flex flex-wrap justify-content-start">
+                {% for movie in search_results %}
+                {% set poster_url = 'https://via.placeholder.com/200x300?text=No+Image' %}
+                {% if movie.poster_path %}
+                    {% if movie.poster_path.startswith('http') %}
+                        {% set poster_url = movie.poster_path %}
+                    {% else %}
+                        {% set poster_url = 'https://image.tmdb.org/t/p/w200' + movie.poster_path %}
+                    {% endif %}
+                {% endif %}
+                <div class="search-result-card mx-2 mb-4 text-center">
+                    <div class="item position-relative">
+                        <a href="{{ url_for('movie_details', movie_id=movie.id) }}" class="d-block poster-link">
+                            <img src="{{ poster_url }}" alt="{{ movie.title }}" class="img-fluid rounded">
+                        </a>
+                        <form action="{{ url_for('already_watched') }}" method="POST"
+                            onsubmit="return playMovie('{{ movie.title }}')"
+                            class="position-absolute top-50 start-50 translate-middle play-button-form">
+                            <input type="hidden" name="movie_id" value="{{ movie.id }}">
+                            <input type="hidden" name="title" value="{{ movie.title }}">
+                            <input type="hidden" name="poster_path" value="{{ movie.poster_path }}">
+                            <button type="submit" class="btn p-0 border-0 bg-transparent" onclick="event.stopPropagation();">
+                                <div class="overlay play-overlay text-white fw-bold">
+                                    ▶ Play
+                                </div>
+                            </button>
+                        </form>
+                        <form action="{{ url_for('add_to_watchlist') }}" method="POST"
+                            class="position-absolute bottom-0 start-0 p-2">
+                            <input type="hidden" name="movie_id" value="{{ movie.id }}">
+                            <input type="hidden" name="title" value="{{ movie.title }}">
+                            <input type="hidden" name="poster_path" value="{{ movie.poster_path }}">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="event.stopPropagation();">+ Add</button>
+                        </form>
+                    </div>
+                    <div class="movie-meta mt-2">
+                        <p class="mb-0 fw-semibold">{{ movie.title }}</p>
+                        <small class="text-muted">
+                            {{ movie.release_date or '' }}
+                            {% if movie.vote_average %} • ★ {{ movie.vote_average }}{% endif %}
+                            {% if movie.imdb_rating %} • IMDb {{ movie.imdb_rating }}{% endif %}
+                        </small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted">No movies match your filters yet. Try relaxing some criteria.</p>
+            {% endif %}
+        </section>
+        {% endif %}
+    </main>
+
+    <footer class="footer bg-black text-center py-3 mt-4">
+        <p class="mb-0">&copy; 2025 Recflix. All rights reserved.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function playMovie(title) {
+            alert(`Playing: ${title}`);
+        }
+    </script>
+</body>
+
+</html>
+
+

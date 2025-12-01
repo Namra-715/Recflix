@@ -144,7 +144,7 @@ def dashboard():
     is_new_user = len(watchlist) == 0
     trending_movies = get_local_trending_movies()
 
-    # --- Handle search if any ---
+    # --- Handle simple search (header search box) ---
     search_query = request.args.get('query', '').strip()
     search_results = []
     if search_query:
@@ -241,6 +241,182 @@ def dashboard():
         pending_requests=pending_requests,
         recommendations=recommendations,
         liked_movies=liked_movies
+    )
+
+
+@app.route('/advanced_search')
+def advanced_search():
+    """Advanced search page with multiple filters."""
+    if 'user_id' not in session:
+        flash("Please login first.", "warning")
+        return redirect('/login')
+
+    user_id = session['user_id']
+    user_name = session.get('full_name', '')
+
+    # Read filters from query parameters
+    title = request.args.get('title', '').strip()
+    genres = request.args.get('genres', '').strip()
+    director = request.args.get('director', '').strip()
+    cast = request.args.get('cast', '').strip()
+    min_vote_average = request.args.get('min_vote_average', '').strip()
+    min_imdb_rating = request.args.get('min_imdb_rating', '').strip()
+    min_runtime = request.args.get('min_runtime', '').strip()
+    original_language = request.args.get('original_language', '').strip()
+    status = request.args.get('status', '').strip()
+    platform = request.args.get('platform', '').strip()
+
+    search_results = []
+
+    # If a streaming platform is selected, use StreamingPlatforms table and join on title
+    platform_column_map = {
+        'netflix': 'netflix',
+        'hulu': 'hulu',
+        'prime_video': 'prime_video',
+        'disney_plus': 'disney_plus',
+    }
+
+    platform_column = platform_column_map.get(platform.lower()) if platform else None
+
+    if platform_column:
+        # Build a joined query: movies + StreamingPlatforms filtered by platform
+        cur = mysql.connection.cursor()
+        query = f"""
+            SELECT m.id, m.title, m.poster_path, m.release_date, m.vote_average, m.imdb_rating
+            FROM movies m
+            JOIN StreamingPlatforms s ON m.title = s.title
+            WHERE s.{platform_column} = 1
+        """
+        params = []
+
+        # Apply additional filters on movies table
+        if title:
+            query += " AND LOWER(m.title) LIKE %s"
+            params.append(f"%{title.lower()}%")
+        if genres:
+            # Simple contains match on genres string
+            query += " AND LOWER(m.genres) LIKE %s"
+            params.append(f"%{genres.lower()}%")
+        if director:
+            query += " AND LOWER(m.director) LIKE %s"
+            params.append(f"%{director.lower()}%")
+        if cast:
+            query += " AND LOWER(m.cast) LIKE %s"
+            params.append(f"%{cast.lower()}%")
+        if min_vote_average:
+            try:
+                float_val = float(min_vote_average)
+                query += " AND m.vote_average >= %s"
+                params.append(float_val)
+            except ValueError:
+                pass
+        if min_imdb_rating:
+            try:
+                float_val = float(min_imdb_rating)
+                query += " AND m.imdb_rating >= %s"
+                params.append(float_val)
+            except ValueError:
+                pass
+        if min_runtime:
+            try:
+                int_val = int(min_runtime)
+                query += " AND m.runtime >= %s"
+                params.append(int_val)
+            except ValueError:
+                pass
+        if original_language:
+            query += " AND LOWER(m.original_language) = %s"
+            params.append(original_language.lower())
+        if status:
+            query += " AND LOWER(m.status) = %s"
+            params.append(status.lower())
+
+        query += " LIMIT 200"
+
+        cur.execute(query, tuple(params))
+        rows = cur.fetchall()
+        cur.close()
+
+        # rows are tuples; map to dicts expected by template
+        search_results = [
+            {
+                'id': row[0],
+                'title': row[1],
+                'poster_path': row[2],
+                'release_date': row[3],
+                'vote_average': row[4],
+                'imdb_rating': row[5],
+            }
+            for row in rows
+            if has_poster_path(row[2])
+        ]
+    else:
+        # No platform selected: use existing MovieDatabase-based filtering on movies table
+        filters = {}
+        if title:
+            filters['title'] = title
+        if genres:
+            filters['genres'] = [g.strip() for g in genres.split(',') if g.strip()]
+        if director:
+            filters['director'] = director
+        if cast:
+            filters['cast'] = cast
+        if min_vote_average:
+            try:
+                filters['vote_average'] = {'operator': '>=', 'value': float(min_vote_average)}
+            except ValueError:
+                pass
+        if min_imdb_rating:
+            try:
+                filters['imdb_rating'] = {'operator': '>=', 'value': float(min_imdb_rating)}
+            except ValueError:
+                pass
+        if min_runtime:
+            try:
+                filters['runtime'] = {'operator': '>=', 'value': int(min_runtime)}
+            except ValueError:
+                pass
+        if original_language:
+            filters['original_language'] = original_language
+        if status:
+            filters['status'] = status
+
+        if filters:
+            db = MovieDatabase(
+                host=MYSQL_CONFIG['host'],
+                database=MYSQL_CONFIG['database'],
+                user=MYSQL_CONFIG['user'],
+                password=MYSQL_CONFIG['password'],
+                port=MYSQL_CONFIG['port']
+            )
+            if db.connect():
+                # Slightly higher limit for advanced search
+                search_results = db.query_movies(filters, limit=200)
+                db.disconnect()
+                search_results = [
+                    movie for movie in search_results
+                    if has_poster_path(movie.get('poster_path'))
+                ]
+
+    form_values = {
+        'title': title,
+        'genres': genres,
+        'director': director,
+        'cast': cast,
+        'min_vote_average': min_vote_average,
+        'min_imdb_rating': min_imdb_rating,
+        'min_runtime': min_runtime,
+        'original_language': original_language,
+        'status': status,
+        'platform': platform,
+    }
+
+    return render_template(
+        'advanced_search.html',
+        user_id=user_id,
+        user_name=user_name,
+        search_results=search_results,
+        form_values=form_values
     )
 
 #create watch list
