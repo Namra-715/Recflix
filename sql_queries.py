@@ -118,6 +118,9 @@ INSERT_REVIEW = """
     VALUES (%s, %s, %s, %s)
 """
 
+UPDATE_REVIEW="UPDATE reviews SET rating = %s, review_text = %s WHERE user_id = %s AND movie_id = %s"
+
+
 # Get newest reviews for a movie (join with users to get reviewer name)
 # Orders by review_id DESC (assuming auto-increment, newer reviews have higher IDs)
 GET_MOVIE_REVIEWS = """

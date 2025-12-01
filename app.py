@@ -17,7 +17,7 @@ from sql_queries import (
     CHECK_PLAYLIST_MOVIE_EXISTS, UPDATE_PLAYLIST, DELETE_PLAYLIST,
     INSERT_COLLABORATOR, GET_PLAYLIST_COLLABORATORS, DELETE_COLLABORATOR,GET_LIKED_MOVIES,GET_USER_LIKE_STATUS,GET_DISTINCT_LANGUAGES, GET_ALL_GENRES,
     DELETE_USER_PREFERENCES, INSERT_LANGUAGE_PREFERENCE, INSERT_GENRE_PREFERENCE,
-    CHECK_LIKE_STATUS, UPDATE_LIKE_STATUS, INSERT_LIKE_STATUS
+    CHECK_LIKE_STATUS, UPDATE_LIKE_STATUS, INSERT_LIKE_STATUS,UPDATE_REVIEW
 )
 import langcodes
 import json
@@ -50,8 +50,35 @@ def home():
     return redirect('/login')
 
 # Registration Page
+# @app.route('/register', methods=['GET', 'POST'])
+# def register():
+#     if request.method == 'POST':
+#         full_name = request.form['full_name']
+#         email = request.form['email']
+#         password = request.form['password'].encode('utf-8')
+#         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
+
+#         cur = mysql.connection.cursor()
+#         # Check if user exists
+#         cur.execute(CHECK_USER_EXISTS, (email,))
+#         account = cur.fetchone()
+#         if account:
+#             flash("User already exists. Please login.", "danger")
+#             return redirect('/login')
+        
+#         # Insert new user
+#         cur.execute(INSERT_USER, (full_name, email, hashed_password))
+#         mysql.connection.commit()
+#         cur.close()
+#         flash("Account created successfully! Please login.", "success")
+#         return redirect('/login')
+
+#     return render_template('register.html')
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    message = None
+    success = False  # flag for styling in template
     if request.method == 'POST':
         full_name = request.form['full_name']
         email = request.form['email']
@@ -62,18 +89,19 @@ def register():
         # Check if user exists
         cur.execute(CHECK_USER_EXISTS, (email,))
         account = cur.fetchone()
-        if account:
-            flash("User already exists. Please login.", "danger")
-            return redirect('/login')
-        
-        # Insert new user
-        cur.execute(INSERT_USER, (full_name, email, hashed_password))
-        mysql.connection.commit()
-        cur.close()
-        flash("Account created successfully! Please login.", "success")
-        return redirect('/login')
 
-    return render_template('register.html')
+        if account:
+            message = "User already exists. Please login."
+        else:
+            # Insert new user
+            cur.execute(INSERT_USER, (full_name, email, hashed_password))
+            mysql.connection.commit()
+            message = "Account created successfully! Please login."
+            success = True
+
+        cur.close()
+    return render_template('register.html', message=message, success=success)
+
 
 
 # Login Page
@@ -438,7 +466,7 @@ def add_to_watchlist():
     existing = cur.fetchone()
 
     if existing:
-        flash("This movie is already in your watchlist!", "info")
+        flash("This movie is already in your watchlist!", "already_exists")
     else:
         cur.execute(INSERT_WATCHLIST, (user_id, movie_id, title, poster_path))
         mysql.connection.commit()
@@ -615,17 +643,19 @@ def add_review():
     # Check if review already exists for this user and movie
     cur.execute(CHECK_REVIEW_EXISTS, (user_id, movie_id))
     existing_review = cur.fetchone()
+
     if existing_review:
-        flash("You have already submitted a review for this movie.", "info")
-        cur.close()
-        return redirect(url_for('movie_details', movie_id=movie_id))
+        # Update the existing review
+        cur.execute(UPDATE_REVIEW, (rating, review_text, user_id, movie_id))
+        mysql.connection.commit()
+        flash("Your review has been updated!", "success")
+    else:
+        # Insert new review
+        cur.execute(INSERT_REVIEW, (user_id, movie_id, rating, review_text))
+        mysql.connection.commit()
+        flash("Your review has been submitted!", "success")
 
-    # Insert new review
-    cur.execute(INSERT_REVIEW, (user_id, movie_id, rating, review_text))
-    mysql.connection.commit()
     cur.close()
-
-    flash("Your review has been submitted!", "success")
     return redirect(url_for('movie_details', movie_id=movie_id))
 
 

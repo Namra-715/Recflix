@@ -1,13 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Register</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
     <div class="container">
         <h2>Create Account</h2>
+
+        <!-- Flash message block -->
+        {% if message %}
+        <div class="{{ 'alert-success' if success else 'alert-warning' }}">
+            {{ message }}
+        </div>
+        {% endif %}
+
+
         <form method="POST" action="/register">
             <input type="text" name="full_name" placeholder="Full Name" required>
             <input type="email" name="email" placeholder="Email" required>
@@ -17,6 +28,5 @@
         <p>Already have an account? <a href="/login">Login here</a></p>
     </div>
 </body>
+
 </html>
-
-
