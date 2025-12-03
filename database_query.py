@@ -73,11 +73,11 @@ USE_HARDCODED_CONFIG = True  # Set to False to be prompted for credentials each 
 
 # MySQL Connection Settings
 MYSQL_CONFIG = {
-    'host': '35.188.165.105',
+    'host': '127.0.0.1',
     'database': 'Recflix',  # Change this to your database name
     'user': 'namra',  # Change this to your MySQL username
     'password': 'recflixdb',  # Leave empty if no password, or set your password here
-    'port': 3306
+    'port': 3309
 }
 # ============================================================================
 
@@ -85,7 +85,7 @@ MYSQL_CONFIG = {
 class MovieDatabase:
     """Class to handle MySQL database operations for movie queries."""
     
-    def __init__(self, host: str, database: str, user: str, password: str, port: int = 3306):
+    def __init__(self, host: str, database: str, user: str, password: str, port: int = 3309):
         """
         Initialize database connection.
         
@@ -94,7 +94,7 @@ class MovieDatabase:
             database: Database name
             user: MySQL username
             password: MySQL password
-            port: MySQL port (default: 3306)
+            port: MySQL port (default: 3307)
         """
         self.host = host
         self.database = database
@@ -122,7 +122,8 @@ class MovieDatabase:
                 database=self.database,
                 user=self.user,
                 password=self.password,
-                port=self.port
+                port=self.port,
+                ssl_disabled=True
             )
             if self.connection.is_connected():
                 self.cursor = self.connection.cursor(dictionary=True)
