@@ -17,7 +17,7 @@ from sql_queries import (
     CHECK_PLAYLIST_MOVIE_EXISTS, UPDATE_PLAYLIST, DELETE_PLAYLIST,
     INSERT_COLLABORATOR, GET_PLAYLIST_COLLABORATORS, DELETE_COLLABORATOR,GET_LIKED_MOVIES,GET_USER_LIKE_STATUS,GET_DISTINCT_LANGUAGES, GET_ALL_GENRES,
     DELETE_USER_PREFERENCES, INSERT_LANGUAGE_PREFERENCE, INSERT_GENRE_PREFERENCE,
-    CHECK_LIKE_STATUS, UPDATE_LIKE_STATUS, INSERT_LIKE_STATUS,UPDATE_REVIEW
+    CHECK_LIKE_STATUS, UPDATE_LIKE_STATUS, INSERT_LIKE_STATUS,UPDATE_REVIEW,ADVANCED_SEARCH_PLATFORM
 )
 import langcodes
 import json
@@ -49,31 +49,7 @@ def has_poster_path(path_value):
 def home():
     return redirect('/login')
 
-# Registration Page
-# @app.route('/register', methods=['GET', 'POST'])
-# def register():
-#     if request.method == 'POST':
-#         full_name = request.form['full_name']
-#         email = request.form['email']
-#         password = request.form['password'].encode('utf-8')
-#         hashed_password = bcrypt.hashpw(password, bcrypt.gensalt())
-
-#         cur = mysql.connection.cursor()
-#         # Check if user exists
-#         cur.execute(CHECK_USER_EXISTS, (email,))
-#         account = cur.fetchone()
-#         if account:
-#             flash("User already exists. Please login.", "danger")
-#             return redirect('/login')
-        
-#         # Insert new user
-#         cur.execute(INSERT_USER, (full_name, email, hashed_password))
-#         mysql.connection.commit()
-#         cur.close()
-#         flash("Account created successfully! Please login.", "success")
-#         return redirect('/login')
-
-#     return render_template('register.html')
+#registration route
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -271,10 +247,9 @@ def dashboard():
         liked_movies=liked_movies
     )
 
-
+#advanced search
 @app.route('/advanced_search')
 def advanced_search():
-    """Advanced search page with multiple filters."""
     if 'user_id' not in session:
         flash("Please login first.", "warning")
         return redirect('/login')
@@ -282,7 +257,7 @@ def advanced_search():
     user_id = session['user_id']
     user_name = session.get('full_name', '')
 
-    # Read filters from query parameters
+    # Read filters
     title = request.args.get('title', '').strip()
     genres = request.args.get('genres', '').strip()
     director = request.args.get('director', '').strip()
@@ -296,7 +271,7 @@ def advanced_search():
 
     search_results = []
 
-    # If a streaming platform is selected, use StreamingPlatforms table and join on title
+    # Platform column mapping
     platform_column_map = {
         'netflix': 'netflix',
         'hulu': 'hulu',
@@ -307,54 +282,54 @@ def advanced_search():
     platform_column = platform_column_map.get(platform.lower()) if platform else None
 
     if platform_column:
-        # Build a joined query: movies + StreamingPlatforms filtered by platform
         cur = mysql.connection.cursor()
-        query = f"""
-            SELECT m.id, m.title, m.poster_path, m.release_date, m.vote_average, m.imdb_rating
-            FROM movies m
-            JOIN StreamingPlatforms s ON m.title = s.title
-            WHERE s.{platform_column} = 1
-        """
+
+        # Start with the base query from sql_queries.py
+        query = ADVANCED_SEARCH_PLATFORM.format(platform_column=platform_column)
         params = []
 
-        # Apply additional filters on movies table
+        # Add filters
         if title:
             query += " AND LOWER(m.title) LIKE %s"
             params.append(f"%{title.lower()}%")
+
         if genres:
-            # Simple contains match on genres string
             query += " AND LOWER(m.genres) LIKE %s"
             params.append(f"%{genres.lower()}%")
+
         if director:
             query += " AND LOWER(m.director) LIKE %s"
             params.append(f"%{director.lower()}%")
+
         if cast:
             query += " AND LOWER(m.cast) LIKE %s"
             params.append(f"%{cast.lower()}%")
+
         if min_vote_average:
             try:
-                float_val = float(min_vote_average)
                 query += " AND m.vote_average >= %s"
-                params.append(float_val)
+                params.append(float(min_vote_average))
             except ValueError:
                 pass
+
         if min_imdb_rating:
             try:
-                float_val = float(min_imdb_rating)
                 query += " AND m.imdb_rating >= %s"
-                params.append(float_val)
+                params.append(float(min_imdb_rating))
             except ValueError:
                 pass
+
         if min_runtime:
             try:
-                int_val = int(min_runtime)
                 query += " AND m.runtime >= %s"
-                params.append(int_val)
+                params.append(int(min_runtime))
             except ValueError:
                 pass
+
         if original_language:
             query += " AND LOWER(m.original_language) = %s"
             params.append(original_language.lower())
+
         if status:
             query += " AND LOWER(m.status) = %s"
             params.append(status.lower())
@@ -365,7 +340,6 @@ def advanced_search():
         rows = cur.fetchall()
         cur.close()
 
-        # rows are tuples; map to dicts expected by template
         search_results = [
             {
                 'id': row[0],
@@ -378,8 +352,9 @@ def advanced_search():
             for row in rows
             if has_poster_path(row[2])
         ]
+
     else:
-        # No platform selected: use existing MovieDatabase-based filtering on movies table
+        # Non-platform search: MovieDatabase handles it
         filters = {}
         if title:
             filters['title'] = title
@@ -410,17 +385,11 @@ def advanced_search():
             filters['status'] = status
 
         if filters:
-            db = MovieDatabase(
-                host=MYSQL_CONFIG['host'],
-                database=MYSQL_CONFIG['database'],
-                user=MYSQL_CONFIG['user'],
-                password=MYSQL_CONFIG['password'],
-                port=MYSQL_CONFIG['port']
-            )
+            db = MovieDatabase(**MYSQL_CONFIG)
             if db.connect():
-                # Slightly higher limit for advanced search
                 search_results = db.query_movies(filters, limit=200)
                 db.disconnect()
+
                 search_results = [
                     movie for movie in search_results
                     if has_poster_path(movie.get('poster_path'))
@@ -446,7 +415,6 @@ def advanced_search():
         search_results=search_results,
         form_values=form_values
     )
-
 #create watch list
 @app.route('/add_to_watchlist', methods=['POST'])
 def add_to_watchlist():

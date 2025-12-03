@@ -56,22 +56,25 @@
                     {% endif %}
                     <p><strong>Description:</strong> {{ description or 'No description available.' }}</p>
 
-                    <div class="mb-3 mt-3" style="display: block; position: relative;">
-                        {% if in_watched %}
-                        <form method="POST" action="{{ url_for('update_last_watched') }}"
-                            style="display: inline-block; margin-right: 10px;">
-                            <input type="hidden" name="movie_id" value="{{ movie_id }}">
-                            <button type="submit" class="btn btn-warning">Resume ▶</button>
-                        </form>
-                        {% else %}
-                        <form method="POST" action="{{ url_for('already_watched') }}"
-                            style="display: inline-block; margin-right: 10px;">
-                            <input type="hidden" name="movie_id" value="{{ movie_id }}">
-                            <input type="hidden" name="title" value="{{ title }}">
-                            <input type="hidden" name="poster_path" value="{{ poster_path }}">
-                            <button type="submit" class="btn btn-danger">Play ▶</button>
-                        </form>
-                        {% endif %}
+                    <div class="mb-3 mt-3">
+                        <div>
+                            {% if in_watched %}
+                            <form method="POST" action="{{ url_for('update_last_watched') }}"
+                                style="display: inline-block; margin-right: 10px;">
+                                <input type="hidden" name="movie_id" value="{{ movie_id }}">
+                                <button type="submit" class="btn btn-warning">Resume ▶</button>
+                            </form>
+                            {% else %}
+                            <form method="POST" action="{{ url_for('already_watched') }}"
+                                style="display: inline-block; margin-right: 10px;">
+                                <input type="hidden" name="movie_id" value="{{ movie_id }}">
+                                <input type="hidden" name="title" value="{{ title }}">
+                                <input type="hidden" name="poster_path" value="{{ poster_path }}">
+                                <button type="submit" class="btn btn-danger">Play ▶</button>
+                            </form>
+                            {% endif %}
+                        </div>
+
 
                         <!-- Add to Playlist Dropdown -->
                         <div class="dropdown" style="display: inline-block; position: relative;">
@@ -148,18 +151,20 @@
 
                     <div class="mt-3 d-flex align-items-center gap-2">
                         <!-- Review Button -->
-                       
+
                         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#reviewModal"
                             onclick="setMovieData('{{ movie_id }}', '{{ title }}')">Review</button>
-                       
+
 
                         <div class="d-flex align-items-center gap-2">
                             {% set user_action = user_likes_dislikes.get(movie_id) %}
 
                             {% if user_action == 'Y' %}
-                            <button class="btn text-white btn-outline-success fw-bold btn-disabled">You have already liked this movie 👍</button>
+                            <button class="btn text-white btn-outline-success fw-bold btn-disabled">You have already
+                                liked this movie 👍</button>
                             {% elif user_action == 'N' %}
-                            <button class="btn text-white btn-outline-danger fw-bold btn-disabled">You have already disliked this movie 👎</button>
+                            <button class="btn text-white btn-outline-danger fw-bold btn-disabled">You have already
+                                disliked this movie 👎</button>
                             {% else %}
                             <!-- Like Button -->
                             <form action="{{ url_for('update_like_dislike') }}" method="POST" class="m-0 p-0">

@@ -411,3 +411,18 @@ INSERT_LIKE_STATUS = """
 INSERT INTO user_likes_dislikes (user_id, movie_id, liked_disliked)
 VALUES (%s, %s, %s)
 """
+
+
+ADVANCED_SEARCH_PLATFORM = """
+SELECT 
+    m.id, 
+    m.title, 
+    m.poster_path, 
+    m.release_date, 
+    m.vote_average, 
+    m.imdb_rating
+FROM movies m
+JOIN StreamingPlatforms s 
+    ON m.title = s.title
+WHERE s.{platform_column} = 1
+"""
