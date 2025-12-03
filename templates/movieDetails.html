@@ -58,9 +58,9 @@
                     <div class="mb-3 mt-3" style="display: block; position: relative;">
                         {% if in_watched %}
                         <form method="POST" action="{{ url_for('update_last_watched') }}" style="display: inline-block; margin-right: 10px;">
-                            <input type="hidden" name="movie_id" value="{{ movie_id }}">
-                            <button type="submit" class="btn btn-warning">Resume ▶</button>
-                        </form>
+                        <input type="hidden" name="movie_id" value="{{ movie_id }}">
+                        <button type="submit" class="btn btn-warning">Resume ▶</button>
+                    </form>
                         {% else %}
                         <form method="POST" action="{{ url_for('already_watched') }}" style="display: inline-block; margin-right: 10px;">
                             <input type="hidden" name="movie_id" value="{{ movie_id }}">

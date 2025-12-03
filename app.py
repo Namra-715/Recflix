@@ -532,26 +532,26 @@ def movie_details(movie_id):
     else:
         # Movie not in already_watched, get from movies table directly
         cur.execute(GET_MOVIE_DETAILS_FROM_MOVIES, (movie_id,))
-        result = cur.fetchone()
-        cur.close()
+    result = cur.fetchone()
+    cur.close()
 
-        if not result:
-            flash("No details found for this movie.", "warning")
-            return redirect(url_for('dashboard'))
+    if not result:
+        flash("No details found for this movie.", "warning")
+        return redirect(url_for('dashboard'))
 
         title, poster_path, description = result
-        return render_template(
-            "movieDetails.html",
-            movie_id=movie_id,
-            title=title,
-            poster_path=poster_path,
+    return render_template(
+        "movieDetails.html",
+        movie_id=movie_id,
+        title=title,
+        poster_path=poster_path,
             last_watched=None,
             description=description,
             in_watched=False,
             reviews=reviews,
             user_reviewed=user_reviewed,
             user_playlists=user_playlists
-        )
+    )
 
 #reviews
 @app.route('/add_review', methods=['POST'])

@@ -97,7 +97,7 @@
                 <small class="text-muted">{{ search_results|length }} result{{ 's' if search_results|length != 1 else '' }}</small>
             </div>
             <div class="d-flex flex-wrap justify-content-start">
-                {% for movie in search_results %}
+            {% for movie in search_results %}
                 {% set poster_url = 'https://via.placeholder.com/200x300?text=No+Image' %}
                 {% if movie.poster_path %}
                     {% if movie.poster_path.startswith('http') %}
@@ -161,11 +161,11 @@
                                     <button type="submit" class="btn btn-danger btn-sm">Reject</button>
                                 </form>
                             </div>
-                        </div>
                     </div>
                 </div>
-                {% endfor %}
             </div>
+            {% endfor %}
+        </div>
         </section>
         {% endif %}
 
@@ -400,8 +400,8 @@
             <div class="col-md-2 col-sm-4 mb-3">
                 <div class="card bg-dark text-white h-100">
                     <a href="{{ url_for('movie_details', movie_id=movie[0]) }}">
-                        <img src="https://image.tmdb.org/t/p/w200{{ movie[2] }}" alt="{{ movie[1] }}"
-                            class="card-img-top rounded">
+                    <img src="https://image.tmdb.org/t/p/w200{{ movie[2] }}" alt="{{ movie[1] }}"
+                        class="card-img-top rounded">
                     </a>
                     <div class="card-body text-center">
                         <h6 class="card-title">{{ movie[1] }}</h6>
